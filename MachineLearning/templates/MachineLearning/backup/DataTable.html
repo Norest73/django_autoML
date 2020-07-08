@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> MOBIS AI 자동화툴 </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+		<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+		<style>
+			#wrapper {
+				display: flex;
+				font-family: Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+				box-sizing: border-box;
+			}
+
+			.sidebar {
+				width: 9rem!important;
+				min-height: 100vh;
+				background-color: rgb(47, 61, 75);
+				background-size: cover;
+				display: flex;
+				flex-direction: column;
+				padding-left: 0;
+				margin-bottom: 0;
+				margin-top: 0;
+				box-sizing: border-box;
+				font-size: 1rem;
+				font-weight: 600;
+				line-height: 1.5;
+				text-align: left;
+			}
+
+			.sidebar-brand {
+				display: block;
+				color: #fff;
+				height: 2.5rem;
+				padding: 0.5rem 0.45rem 0.5rem 0.45rem;
+				text-align: center;
+				align-items: center!important;
+				display: block;
+				justify-content: center!important;
+				margin-left: 0.5rem;
+				margin-right: 0.5rem;
+				margin-bottom: 0.2rem;
+				font-size: 1.8rem;
+				font-weight: 600;
+				text-align: center;
+  				letter-spacing: .05rem;
+  				list-style: none;
+  				letter-spacing: 0.15rem;
+			}
+
+			.sidebar-divider {
+				margin: 0 0.5rem 0.5rem 0.5rem;
+				border-color : rgba(255,255,255,.30);
+			}
+
+			.nav-item {
+				position: relative;
+				box-sizing: border-box;
+			}
+
+			.nav-link {
+				color: #fff;
+				font-weight: 400;
+				font-size: 0.8rem;
+				padding: 1.15rem 0;
+				display: block;
+				align-items: center!important;
+				text-align: center;
+			}
+
+			.used {
+				/* background-color: rgba(32, 60, 153, 0.75)!important; */
+			}
+
+			.unused {
+				color: rgb(77, 100, 123)!important;
+			}
+
+			.nav-link>span {
+				margin-top: 0.4rem;
+				padding-left: 0.15rem;
+				font-size: 0.8rem!important;
+				font-weight: 500;
+				display: block;
+
+			}
+
+			a.nav-link i {
+				width:35px;
+				text-align: center;
+			}
+
+			#content-wrapper {
+				/* background-color: rgb(246, 247, 250); */
+				padding-left: 0.1rem;
+				padding-right: 0rem;
+				margin-right: auto;
+				margin-left: auto;
+				box-sizing: border-box;
+			}
+
+			#content-head {
+				height: 80px;
+				color: #5a5c69!important;
+				font-size: 1rem;
+				font-weight: 500;
+				line-height: 1.2;
+				display: flex;
+				align-items: flex-end!important;
+				min-width: 1500px;
+			}
+
+			.content-divider {
+				margin: 0rem;
+				border-color : rgba(255,255,255,.30);
+			}
+
+			.shadow {
+				box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15)!important;
+			}
+
+			.card {
+				width: 1200px;
+				margin-top: 20px;
+				position: relative;
+				display: flex;
+				flex-direction: column;
+				word-wrap: break-word;
+				background-color: #fff;
+				background-clip: border-box;
+				border: 1px solid #e3e6f0;
+				border-radius: .35rem;
+				box-sizing: border-box;
+			}
+
+			.card-header {
+				border-radius: calc(.35rem - 1px) calc(.35rem - 1px) 0 0;
+				padding-bottom: 1rem!important;
+				padding-top: 1rem!important;
+				padding: .75rem 1.25rem;
+			    margin-bottom: 0;
+			    background-color: #f8f9fc;
+			    border-bottom: 1px solid #e3e6f0;
+			    color: #4e73df!important;
+			    font-weight: 700!important;
+			    font-size: 1.25rem;
+			    margin: 0!important;
+			}
+
+			.card-body {
+				padding: .75rem 1.25rem;
+				height: 600px;
+				margin: auto;
+			}
+
+			.card-body-form {
+				height: 100%;
+				align-items: center!important;
+			}
+
+			.colnames {
+				padding: 3px 0 3px 12px;
+				min-width: 150px!important;
+				max-width: 150px!important;
+				height: 27px;
+				font-weight: 600;
+				font-size: 1rem;
+				text-align: left;
+				background-color: rgb(242, 245, 245);
+				border: 0.5px solid rgb(223,227,230);
+			}
+
+			.table1 {
+				font-size: 1rem;
+				font-weight: 400;
+				border-collapse: collapse;
+				border: 0.5px solid rgb(223,227,230);
+				margin: 0;
+				table-layout: fixed;
+			}
+
+			.table1 td{
+				border: 0.5px solid rgb(223,227,230);
+				min-width: 160px!important;
+				max-width: 160px!important;
+			}
+
+			.table1 span{
+				font-weight: 400!important;
+				font-size: 0.8rem;
+
+			}
+
+			.table2 {
+				border: 0.5px solid rgb(223,227,230);
+				display: table;
+				margin: 0 auto;
+				width: 80%;
+				clear: both;
+				border-collapse: collapse;
+				table-layout: fixed; 
+				text-overflow:ellipsis;
+				white-space:nowrap;
+				word-wrap:normal;
+				overflow: hidden;
+			}
+
+			.table2 th {
+				box-sizing: border-box;
+				border: 0.5px solid rgb(223,227,230);
+				background-color: rgb(242, 245, 245);
+				color: rgb(242, 245, 245);
+				width: 136px;
+				text-overflow:ellipsis;
+				white-space:nowrap;
+				word-wrap:normal;
+				overflow: hidden;
+				font-size: 0.7rem;
+				font-weight: 500!important;
+				height: 0.8rem;
+				text-align: right;
+			}
+
+			.table2 td {
+				margin-left: 0!important;
+				line-height: 5px;
+				padding: 0 20px 0 20px!important;
+				width: 137px;
+				text-overflow:ellipsis;
+				white-space:nowrap;
+				word-wrap:normal;
+				overflow: hidden;
+				text-align: right;
+				font-size: 0.8rem;
+				font-weight: 400;
+			}
+
+			.sorting_1, .sorting_asc, .sorting_desc {
+				color: black!important;
+				font-size: 0.9rem!important;
+				font-weight: 600!important;
+			}
+
+		</style>
+
+	</head>
+	<body>
+		<div id="wrapper">
+			<!-- Sidebar -->
+			<ul class="sidebar" id="accordionSidebar">
+				<!-- Sidebar - Brand -->
+				<a class="sidebar-brand" href="#" style="text-decoration:none">
+					M<span style="color:red">O</span>AM
+				</a>
+				<!-- Divider -->
+				<hr class="sidebar-divider">
+				<!-- Dashboard -->
+				<li class="nav-item active">
+					<a class="nav-link used" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo" style="text-decoration:none">
+						<i class="far fa-file-excel fa-2x" style="width:35px; text-align: center;"></i>
+						<span>DATA UPLOAD</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-chart-line fa-3x"></i>
+						<span>DATA <br>EXPLORATION</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-cogs fa-2x"></i>
+						<span>FEATURE <br> ENGINEERING</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-dice-d6 fa-2x"></i>
+						<span>MODELING</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="far fa-paper-plane fa-2x"></i>
+						<span>RESULT</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-robot fa-2x"></i>
+						<span>SIMULATION</span>
+					</a>
+				</li>
+			</ul>
+			<div id="content-wrapper">
+				<table class="table1">
+					<tbody>
+						<tr>
+							<!-- infoTable Column 이름 게시 -->
+							{% for colname in colnames %}
+								<td class="colnames">{{colname}}</td>
+							{% endfor %}
+						</tr>
+						<tr>
+							<!-- Plotly를 통한 infoTable 그래프(histogram, bar, text) 생성-->
+							<script type="text/javascript">
+								var col_nums = {{col_nums|safe}};
+								var type_ls = {{type_ls|safe}};
+								var X_ls = {{X_ls|safe}};
+								var Y_ls = {{Y_ls|safe}};
+
+								for (var i=0; i<col_nums; i++){
+									document.write("<td id='plot"+i.toString()+"' style='width:200px;height:100px'></td>")
+									if (type_ls[i] === 'histogram') {
+										var trace1 = {
+											x: X_ls[i],
+											type: 'histogram',
+											marker: { color: 'rgba(0, 124, 168, 0.75)'
+											},
+											hoverinfo: 'x+y',
+											hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+															'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+										};
+
+										var data = [trace1],
+											layout = {
+												xaxis: {showgrid: false, zeroline: false, linewidth: 1.3, fixedrange: true},
+												yaxis: {showgrid: false, showticklabels: false, zeroline: false, fixedrange: true},
+												bargap: 0.3,
+												height: 85,
+												width: 170,
+												margin: {l: 10, r: 10, b: 23, t: 1},
+												hovermode: 'closest',
+												hoverlabel: {
+													bgcolor: 'white',
+													bordercolor: '#D3D3D3',
+													font: {color: 'black', size: 11}
+												}
+											};
+
+										Plotly.newPlot('plot'+i.toString(), data, layout, {displayModeBar: false});
+									} else if (type_ls[i] === 'bar') {
+										var trace1 = {
+											x: X_ls[i],
+											y: Y_ls[i],
+											type: 'bar',
+											marker: { color: 'rgba(0, 124, 168, 0.75)'},
+											hoverinfo: 'x+y',
+											hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+															'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+										};
+
+										var data = [trace1],
+											layout = {
+												xaxis: {showgrid: false, zeroline: false, linewidth: 1.3, fixedrange: true},
+												yaxis: {showgrid: false, showticklabels: false, zeroline: false, fixedrange: true},
+												bargap: 0.05,
+												height: 85,
+												width: 170,
+												margin: { l: 10, r: 10, b: 23, t: 1 },
+												hovermode: 'closest',
+												hoverlabel: {
+													bgcolor: 'white',
+													bordercolor: '#D3D3D3',
+													font: {color: 'black', size:11}
+												}
+											};
+
+										Plotly.newPlot('plot'+i.toString(), data, layout, {displayModeBar: false});
+									} else if (type_ls[i] === 'text') {
+										var td_inner1 = document.createElement('div');
+										td_inner1.id = 'plot'+i.toString()+'-div1';
+
+										var unique_values = X_ls[i];
+										td_inner1.innerText = X_ls[i].toString();
+										td_inner1.style.color = 'rgba(0, 124, 168, 0.75)';
+										td_inner1.style.fontSize = "1.2rem";
+										td_inner1.style.fontWeight = "600";
+										td_inner1.style.textAlign = 'center';
+										document.getElementById("plot"+i.toString()).appendChild(td_inner1)
+
+										var td_inner2 = document.createElement('div');
+										td_inner2.id = 'plot'+i.toString()+'-div2';
+										td_inner2.innerText = 'unique values';
+										td_inner2.style.fontSize = "1.2rem"
+										td_inner2.style.fontWeight = "600";
+										td_inner2.style.textAlign = 'center';
+										document.getElementById("plot"+i.toString()).appendChild(td_inner2)
+									}
+								}
+							</script>
+						</tr>
+						<tr>
+							{% for infos in file_infos %}
+								<td style="clear:both; position: relative; width: 170px;">
+									{% for info in infos %}
+									<span style="text-align:left; float:left; position:absolute; left: 5px; font-weight: 500; width: 170px;">{{info.0}}</span>
+									<span style="text-align:right; float:right; position:absolute; right: 5px; font-weight: 500; width: 170px;">{{info.1}}</span><br>
+									{% endfor %}
+								</td>
+							{% endfor %}
+						</tr>
+					</tbody>
+				</table>
+				<table id="j-datatable" class="table2 cell-border table-striped table-condensed dataTable hover">
+					<thead><tr></tr></thead>
+				</table>
+				<!-- DataTable 생성-->
+				    <script type="text/javascript">
+				        var data,
+				                tableName= '#j-datatable',
+				                columns,
+				                str,
+				                jqxhr = $.ajax("{% url 'CSVtoJSON' %}")
+				                        .done(function () {
+				                            data = JSON.parse(jqxhr.responseText);
+
+				                // Iterate each column and print table headers for Datatables
+				                var num = 0
+				                $.each(data.columns, function (k, colObj) {
+				                    
+				                    str = '<th>' + "Sorting" +'</th>';
+				                    $(str).appendTo(tableName+'>thead>tr');
+				                    num=1
+				                });
+
+				                // Add some Render transformations to Columns
+				                // Not a good practice to add any of this in API/ Json side
+				                data.columns[0].render = function (data, type, row) {
+				                    return '<p>' + data + '</p>';
+				                }
+				                        // Debug? console.log(data.columns[0]);
+
+				                $(tableName).dataTable({
+				                    "data": data.data,
+				                    "columns": data.columns,
+				                    "pageLength": 100,
+				                    "lengthChange": false,
+				                    "searching": false,
+				                    "scrollX": false,
+				                    "scrollY": 700,
+				                    "stateSave": true,
+
+				                    //"paging":false,
+				                    //"scrollCollapse":true,
+				                    "fnInitComplete": function () {
+				                        // Event handler to be fired when rendering is complete (Turn off Loading gif for example)
+				                        console.log('Datatable rendering complete');
+				                    }
+				                });
+				            })
+				            .fail(function (jqXHR, exception) {
+				                            var msg = '';
+				                            if (jqXHR.status === 0) {
+				                                msg = 'Not connect.\n Verify Network.';
+				                            } else if (jqXHR.status == 404) {
+				                                msg = 'Requested page not found. [404]';
+				                            } else if (jqXHR.status == 500) {
+				                                msg = 'Internal Server Error [500].';
+				                            } else if (exception === 'parsererror') {
+				                                msg = 'Requested JSON parse failed.';
+				                            } else if (exception === 'timeout') {
+				                                msg = 'Time out error.';
+				                            } else if (exception === 'abort') {
+				                                msg = 'Ajax request aborted.';
+				                            } else {
+				                                msg = 'Uncaught Error.\n' + jqXHR.responseText;
+				                            }
+				                console.log(msg);
+				            });
+				    </script> 
+			</div>
+		</div>
+	</body>
+</html>
+
+

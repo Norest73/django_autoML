@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> AutoML </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+		<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+		<style>
+			body {
+				margin: 0 0;
+			}
+
+			body {
+				width: 100%;
+				height: calc(100vh - 65px);
+				/*min-height: calc(100vh - 65px);*/
+				margin: 0 0;
+				/*background-color: rgba(245,245,245,0.1);*/
+			}
+
+			/*스크롤바 설정*/
+			body::-webkit-scrollbar {
+			  width: 6px;
+			}
+			body::-webkit-scrollbar-track {
+			  background-color: transparent;
+			}
+			body::-webkit-scrollbar-thumb {
+			  border-radius: 3px;
+			  background-color: gray;
+			}
+			body::-webkit-scrollbar-button {
+			  width: 0;
+			  height: 0;
+			}
+
+			.plots-all {
+				width: 600px;
+				height: 500px;
+				clear: both;
+				margin: 0 auto;
+			}
+
+			/*.plots-text {
+				width: 100%;
+				height: 70%;
+				float: left;
+				margin: 0 auto;
+			}*/
+
+			.plots-plot {
+				/*float: right;*/
+				width: 100%;
+				height: 65%;
+				/*float: right;*/
+				margin: 0 auto;
+				/*display: table;*/
+			}
+
+			.top-text {
+				width: 100%;
+				height: 10%;
+				font-weight: 600;
+				font-size: 22px;
+				vertical-align: middle;
+				margin: 15px -0 -15px 0;
+				/*line-height: 70px;*/
+				/*margin: 0 -15px 0 15px;*/
+				/*vertical-align: middle;*/
+				/*margin: 30px 15px -30px 15px;*/
+				/*display: table-cell;
+				vertical-align: middle;*/
+			}
+
+			.bottom-text {
+				width: 95%;
+				height: 25%;
+				/*margin: 0 -15px 0 15px;*/
+				font-size: 13px;
+				margin: 25px -10px -25px 10px;
+				color: rgb(60,60,60);
+				line-height: 1.7;
+			}
+
+			.blanks-all {
+				width: 100%;
+				height: 60px;
+				clear: both;
+			}
+
+			.EDA-subject {
+				width: 100%;
+				height: 85px;
+				clear: both;
+				line-height: 50px;
+				font-weight: 700;
+				font-size: 28px;
+				margin: 15px 0 -15px 0;
+			}
+
+		</style>
+	</head>
+	<body id='plot-body'>
+	</body>
+		<script type='text/javascript'>
+			var blank0 = document.createElement('div');
+			blank0.className = 'EDA-subject';		
+			blank0.innerHTML = '&nbsp;&nbsp;&nbsp; Exploratory Data Analysis of Variables';
+			document.getElementById('plot-body').appendChild(blank0);
+
+			// 첫번째 Plot div(Title/Plot/Text)와 세로간격 조절을 위한 blank div 생성
+			var plot1 = document.createElement('div');
+			plot1.id = 'plot1-all';
+			plot1.className = 'plots-all'; // html의 css에서 plots-all 전체 관리
+
+			document.getElementById('plot-body').appendChild(plot1);
+			plot1_all = document.getElementById("plot1-all");
+			plot1_all.innerHTML = '<div class="top-text" id="text-1-1"></div>'+
+								  '<div class="plots-plot" id="plot-x"></div>'+
+								  '<div class="bottom-text" id="text-1-2"></div>'+
+								  '<div style="height:35px"></div>';
+
+			var blank1 = document.createElement('div');
+			blank1.className = 'blanks-all';
+			document.getElementById('plot-body').appendChild(blank1);
+
+			var version = "{{Version | safe}}" ;
+
+			if (version === 'none_plot') {
+
+				text =  '<div style="padding-top: 20px; width:100%;"><span style="font-weight:600; font-size: 20px"> 현재 선택된 변수 데이터는' +
+						'그래프 분석에 적합하지 않습니다.</span></div>'+ 
+						'<div style="padding-top: 10px; width:100%;"><span style="font-weight:600; font-size: 20px"> 다른 변수를 선택해주세요.</span></div>' +
+						'<b><ol style="margin-left:-20px;margin-right:20px"><li style="line-height:2.3; font-size: 15px;"> 선택된 변수에 데이터가 존재하지 않는 경우</li>'+
+						'<li style="line-height:2.3; font-size: 15px;"> 선택된 범주형 변수의 모든 값이 달라서 분석 할 수 없는 경우 (ex. DATA ID) </li></ol></b>'
+				plot1_all.innerHTML = text;
+
+			} else {
+				var col1 = '{{col1 | safe}}';
+				var x_dist =  {{X_DIST | safe }};
+				var x_text = '{{X_TEXT | safe}}';
+
+				text11 = document.getElementById('text-1-1');
+				text12 = document.getElementById('text-1-2');
+
+				text11.innerHTML = 'Distribution of '+ col1;
+				text12.innerHTML = x_text;
+
+				if (version === 'only_Numeric') {
+
+					// 1) Histogram
+					var trace0 = {
+						x: x_dist,
+						type: 'histogram',
+						// marker: {
+						// 	color: 'rgba(0, 138, 188, 0.7)',
+						// 	line: {
+						// 		color: '#008abc',
+						// 		width: 1
+						// 	}
+						// },
+						hoverinfo: 'x+y',
+						hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+										'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+					}; 
+
+					var data = [trace0],
+						layout = {
+							xaxis: {showgrid: false, zeroline: false, linewidth: 1, fixedrange: false},
+							yaxis: {showgrid: true, showticklabels: true, zeroline: false, fixedrange: true},
+							bargap: 0.1,
+							width: 600,
+							margin: { l: 50, r: 50, b: 50, t: 50 },
+							hovermode: 'closest',
+							hoverlabel: {
+								bgcolor: 'white',
+								bordercolor: '#D3D3D3',
+								font: {color: 'black'}
+							},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15}
+						};
+
+					Plotly.newPlot('plot-x', data, layout);
+
+				} else if (version == 'only_Categorical') {
+
+					// 1) Bar Chart
+					var trace0 = {
+						x: x_dist[0],
+						y: x_dist[1],
+						type: 'bar',
+						hoverinfo: 'x+y',
+						hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+										'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+						};
+
+					var data = [trace0],
+						layout = {
+							width: 600,
+							margin: { l: 50, r: 50, b: 50, t: 50 },
+							showlegend: false,
+							bargap :0.3,
+							hovermode: 'closest',
+							hoverlabel: {
+								bgcolor: 'white',
+								bordercolor: '#D3D3D3',
+								font: {color: 'black'}
+							},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false, type: 'category'}
+						};
+
+					Plotly.newPlot('plot-x', data, layout);
+
+				} else if (version == 'only_Time') {
+
+					// 1) Timeline Chart
+					var trace0 = {
+							type: 'scatter',
+							mode: 'lines',
+							x: x_dist[0],
+							y: x_dist[1],
+							hovertemplate:'<b style="text-align: left">Count:</b> %{y} <extra></extra>'
+						};
+
+					var data = [trace0],
+						layout = {
+							width: 600,
+							margin: { l: 50, r: 50, b: 50, t: 50 },
+							xaxis: {
+								autorange: true,
+								range: x_dist[2],
+								rangeslider: {range: x_dist[2]},
+								type: 'date'
+							},
+							yaxis: {
+								autorange: true,
+								range: x_dist[3],
+								type: 'linear'
+							},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15},
+								hovermode: 'x unified'
+						};
+
+					Plotly.newPlot('plot-x', data, layout);
+
+				} else {
+
+					// 두번째 Plot div(Title/Plot/Text)와 세로간격 조절을 위한 blank div 생성 (plot-y)
+					var plot2 = document.createElement('div');
+					plot2.id = 'plot2-all';
+					plot2.className = 'plots-all';
+
+					document.getElementById('plot-body').appendChild(plot2);
+					plot2_all = document.getElementById("plot2-all");
+					plot2_all.innerHTML = '<div class="top-text" id="text-2-1"></div>'+
+										  '<div class="plots-plot" id="plot-y"></div>'+
+										  '<div class="bottom-text" id="text-2-2"></div>'+
+										  '<div style="height:35px"></div>';
+
+					var blank2 = document.createElement('div');
+					blank2.className = 'blanks-all';
+					document.getElementById('plot-body').appendChild(blank2);
+
+					// 세번째 Plot div(Title/Plot/Text)와 세로간격 조절을 위한 blank div 생성 (plot-x-y-1)
+					var plot3 = document.createElement('div');
+					plot3.id = 'plot3-all';
+					plot3.className = 'plots-all';
+					document.getElementById('plot-body').appendChild(plot3);
+					plot3_all = document.getElementById("plot3-all");
+					plot3_all.innerHTML = '<div class="top-text" id="text-3-1"></div>'+
+										  '<div class="plots-plot" id="plot-x-y-1"></div>'+
+										  '<div class="bottom-text" id="text-3-2"></div>'+
+										  '<div style="height:35px"></div>';
+
+					var blank3 = document.createElement('div');
+					blank3.className = 'blanks-all';
+					document.getElementById('plot-body').appendChild(blank3);
+
+					var col2 = '{{col2 | safe}}';
+					var y_dist =  {{Y_DIST | safe}} ;
+					var y_text =  '{{Y_TEXT | safe}}';
+
+					text21 = document.getElementById('text-2-1')
+					text22 = document.getElementById('text-2-2')
+					text21.innerHTML = 'Distribution of '+ col2
+					text22.innerHTML = y_text
+
+					text31 = document.getElementById('text-3-1')
+					text32 = document.getElementById('text-3-2')
+
+					if (version== 'Time_Numeric') { // time & numeric
+
+						var xy_dist = {{XY_DIST1 | safe}};
+						var xy_title = '{{XY_TITLE1 | safe}}';
+						var xy_text = '{{XY_TEXT1 | safe}}';
+					
+						text31.innerHTML = xy_title 
+						text32.innerHTML = xy_text
+
+						// 1) Time-count
+						var trace0 = {
+								type: 'scatter',
+								mode: 'lines',
+								x: x_dist[0],
+								y: x_dist[1],
+								hovertemplate:'<b style="text-align: left">Count:</b> %{y} <extra></extra>'
+							};
+
+						var data = [trace0],
+							layout = {
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								xaxis: {
+									autorange: true,
+									range: x_dist[2],
+									rangeslider: {range: x_dist[2]},
+									type: 'date'
+								},
+								yaxis: {
+									autorange: true,
+									range: x_dist[3],
+									type: 'linear'
+								},
+									xaxis: {title: '<b>'+col1+'</b>', size: 15},
+									hovermode: 'x unified'
+							};
+
+						Plotly.newPlot('plot-x', data, layout);
+
+						// 2) Y-histogram
+						var	trace0 = {
+							x: y_dist,
+							type: 'histogram',
+							hoverinfo: 'x+y',
+							hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+											'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+						};
+
+						var data = [trace0],
+							layout = {
+								xaxis: {showgrid: false, zeroline: false, linewidth: 1, fixedrange: true},
+								yaxis: {showgrid: true, showticklabels: true, zeroline: false, fixedrange: true},
+								bargap: 0.1,
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								hovermode: 'closest',
+								hoverlabel: {
+									bgcolor: 'white',
+									bordercolor: '#D3D3D3',
+									font: {color: 'black'}
+								}
+							};
+
+						Plotly.newPlot('plot-y', data, layout);			
+
+						// 3) time line chart
+						var X_ls = xy_dist[0],
+							Y_ls = xy_dist[1],
+							X_range = xy_dist[2],
+							Y_range = xy_dist[3];
+
+						var trace0 = {
+							type: 'scatter',
+							mode: 'lines',
+							x: xy_dist[0],
+							y: xy_dist[1],
+							hoverinfo:'none',
+							hovertemplate:'<b style="text-align: left">'+col2+':</b> %{y} <extra></extra>'
+						};
+
+						var data = [trace0],
+							layout = {
+								xaxis: {
+									autorange: true,
+									range: X_range,
+									rangeslider: {range:X_range,},
+									type: 'date'
+								},
+								yaxis: {
+									autorange: true,
+									range: Y_range,
+									type: 'linear'
+								},
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								hovermode: 'x unified',
+							};
+
+						Plotly.newPlot('plot-x-y-1', data, layout);
+					}
+
+					else {
+
+						// 네번째 Plot div(Title/Plot/Text)와 세로간격 조절을 위한 blank div 생성 (plot-x-y-2)
+						var plot4 = document.createElement('div');
+						plot4.id = 'plot4-all';
+						plot4.className = 'plots-all';
+						document.getElementById('plot-body').appendChild(plot4);
+						plot4_all = document.getElementById("plot4-all");
+						plot4_all.innerHTML = '<div class="top-text" id="text-4-1"></div>'+
+											  '<div class="plots-plot" id="plot-x-y-2"></div>'+
+											  '<div class="bottom-text" id="text-4-2"></div>'+
+											  '<div style="height:35px"></div>';
+
+						var blank4 = document.createElement('div');
+						blank4.className = 'blanks-all';	
+						document.getElementById('plot-body').appendChild(blank4);
+
+						var xy_dist1 = {{XY_DIST1 | safe}} ;
+						var xy_dist2 = {{XY_DIST2 | safe}} ;
+						var xy_text1 = '{{XY_TEXT1 | safe}}';
+						var xy_text2 = '{{XY_TEXT2 | safe}}';
+						var xy_title1 = '{{XY_TITLE1 | safe}}';
+						var xy_title2 = '{{XY_TITLE2 | safe}}';
+
+						text31.innerHTML = xy_title1
+						text32.innerHTML = xy_text1
+
+						text41 = document.getElementById('text-4-1')
+						text42 = document.getElementById('text-4-2')
+
+						text41.innerHTML = xy_title2
+						text42.innerHTML = xy_text2
+
+						if (version == 'Numeric_Numeric') { // numeric & numeric
+
+							// 1) X-histogram
+							var trace0 = {
+								x: x_dist,
+								type: 'histogram',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+							}; 
+
+							var data = [trace0],
+								layout = {
+									xaxis: {showgrid: false, zeroline: false, linewidth: 1, fixedrange: true},
+									yaxis: {showgrid: true, showticklabels: true, zeroline: false, fixedrange: true},
+									bargap: 0.1,
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15}
+								};
+
+							Plotly.newPlot('plot-x', data, layout);
+
+							// 2) Y-histogram
+
+							var	trace0 = {
+								x: y_dist,
+								type: 'histogram',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+							};
+
+							var data = [trace0],
+								layout = {
+									xaxis: {showgrid: false, zeroline: false, linewidth: 1, fixedrange: true},
+									yaxis: {showgrid: true, showticklabels: true, zeroline: false, fixedrange: true},
+									bargap: 0.1,
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+									xaxis: {title: '<b>'+col2+'</b>', size: 15}
+								};
+
+							Plotly.newPlot('plot-y', data, layout);
+
+							// 3) scatter & regression
+							// X_ls, scatter_ls, regression_ls, coef, intercept
+							var trace0 = { // scatter
+								x: xy_dist1[0],
+								y: xy_dist1[1],
+								mode: 'markers',
+								name: 'Point',
+								marker: {
+									// color: 'rgba(0, 138, 188, 0.3)',
+									size: 5
+								},
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left">Data</b>'+
+											   '<br><b style="text-align: left">'+col1+':</b> %{x}'+
+											   '<br><b><span style="text-align: left">'+col2+':</span></b> %{y} <extra></extra>',
+							};
+
+							var trace1 = { // regression
+								x: xy_dist1[0],
+								y: xy_dist1[2],
+								mode: 'lines',
+								name: 'Regression',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left">Regression Model</b>'+
+											   '<br><b style="text-align: left">'+col1+':</b> %{x}'+
+											   '<br><b><span style="text-align: left">'+col2+':</span></b> %{y} <extra></extra>',
+								hoverlabel: {
+										opacity: 0.7
+									},
+							};
+
+							var data = [trace0, trace1],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									hovermode: 'closest',
+								xaxis: {title: '<b>'+col1+'</b>', size: 15},
+								yaxis: {title: '<b>'+col2+'</b>', size: 15},
+								};
+
+							Plotly.newPlot('plot-x-y-1', data, layout);
+
+							// 4) 2d density + scatter
+							var trace0 = { // scatter
+								x: xy_dist2[0],
+								y: xy_dist2[1],
+								mode: 'markers',
+								marker: {
+									size: 4,
+									opacity: 0.6,
+								},
+								type:'scatter',
+
+							};
+
+							var trace1 = { // contour
+								x: xy_dist2[0],
+								y: xy_dist2[1],
+								nconturs: 20,
+								colorscale: 'YlGnBu',
+								reversescale: true,
+								showscale: false,
+								type: 'histogram2dcontour',
+								hoverinfo: 'x+y+z',
+								hovermode: 'closest',
+								hovertemplate: '<b style="text-align: left">'+col1+':</b>  %{x}  '+
+												'<br><b style="text-align: left">'+col2+':</b>  %{y}  '+
+												'<br><b style="text-align: left">Density:</b>  %{z}   <extra></extra>',							};
+
+							var trace2 = { // X-histogram
+								x: xy_dist2[0],
+								yaxis: 'y2',
+								type: 'histogram',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> '+col1+':</b> %{x}'+
+											   '<br><b style="text-align: left"> Count:</b> %{y} <extra></extra>'
+							};
+
+							var trace3 = { // Y-histogram
+								y: xy_dist2[1],
+								xaxis: 'x2',
+								type: 'histogram',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> '+col2+':</b> %{y}'+
+											   '<br><b style="text-align: left"> Count:</b> %{x} <extra></extra>'
+							};
+
+							var data = [trace0,trace1,trace2,trace3],
+								layout = {
+									showlegend: false,
+									autosize: false,
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									hovermode: 'closest',
+									bargap: 0.1,
+									xaxis: {domain:[0, 0.85], showgrid: false, zeroline: false, fixedrange: true},
+									yaxis: {domain:[0, 0.85], showgrid: false, zeroline: false, fixedrange: true},
+									xaxis2:{domain:[0.85, 1], showgrid: false, zeroline: false, fixedrange: true}, 
+									yaxis2:{domain:[0.85, 1], showgrid: false, zeroline: false, fixedrange: true},
+								};
+
+							Plotly.newPlot('plot-x-y-2', data, layout);
+
+							text42.outerHTML = '<div class="bottom-text" id="text-4-2" style="margin: 125px 0 30px 0">'+xy_text2+'</div>'
+							// text42.innerHTML = xy_text2
+
+						} else if (version == 'Numeric_Categorical') {
+
+							// 1) Histogram
+							var trace0 = {
+								x: x_dist,
+								type: 'histogram',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+							}; 
+
+							var data = [trace0],
+								layout = {
+									xaxis: {showgrid: false, zeroline: false, linewidth: 2, fixedrange: true},
+									yaxis: {showgrid: true, showticklabels: false, zeroline: false, fixedrange: true},
+									bargap: 0.1,
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+									xaxis: {title: '<b>'+col1+'</b>', size: 15}
+								};
+
+							Plotly.newPlot('plot-x', data, layout);
+
+							// 2) Bar chart
+							var trace0 = {
+								x: y_dist[0],
+								y: y_dist[1],
+								type: 'bar',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>',
+								};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									// showlegend: false,
+									bargap :0.3,
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+								xaxis: {title: '<b>'+col2+'</b>', size: 15, autotick: false, type: 'category'},
+								};
+
+
+							Plotly.newPlot('plot-y', data, layout);
+
+							// 3) Distplot
+							var label_num = xy_dist1[0]
+							var final_labels = xy_dist1[1];
+							var data_ls = xy_dist1[2];
+
+							var data = [];
+							for (var i=0; i<label_num; i++){
+								eval("var trace"+i+"= {x:data_ls["+i+"][0], y:data_ls["+i+"][1], name:"
+									+"final_labels["+i+"]"+
+									",hoverinfo:'y',mode:'lines'}; data.push(trace"+i+");")
+							};
+
+							var layout = {
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								xaxis: {showgrid: false, zeroline: false, fixedrange: true, title: '<b>'+col1+'</b>', size: 15},
+								yaxis: {showgrid: true, showticklabels: true,zeroline: true, fixedrange: true},
+								// xaxis: {title: '<b>'+col2+'</b>', size: 15},
+								hovermode: 'closest',
+								hoverlabel:{
+									font: {size: 14, color:'white'}, bordercolor: 'white'
+								}
+							};
+
+							Plotly.newPlot('plot-x-y-1', data, layout);
+
+							// 4) stacked histogram
+							var label_num = xy_dist2[0];
+							var final_labels = xy_dist2[1];
+							var data_ls = xy_dist2[2];
+
+							var data = [];
+
+							for (var i=0; i<label_num; i++){
+								eval("var trace"+i+"= {x: data_ls["+i+"], type:'histogram', name:"
+									+"final_labels["+i+"],"
+									+"}; data.push(trace"+i+");")
+							};
+
+							var layout = {
+								barmode: 'stack',
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								xaxis: {showgrid: true, zeroline: false, linewidth: 2, fixedrange: true},
+									yaxis: {showgrid: true, showticklabels: true, zeroline: false, fixedrange: true},
+									bargap: 0.1,
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									// hovermode: 'closest',
+									hoverlabel: {
+										// bgcolor: 'white',
+										// bordercolor: '#D3D3D3',
+										// font: { color:'white'}, bordercolor: 'white'
+									},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15},
+								hovermode: 'x unified'
+							};
+
+							Plotly.newPlot('plot-x-y-2', data, layout);
+
+						} else if (version == 'Categorical_Numeric') { // categorical & numeric
+
+							// 1) Bar chart
+							var trace0 = {
+								x: x_dist[0],
+								y: x_dist[1],
+								type: 'bar',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>',
+								};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									bargap :0.3,
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false, type: 'category'},
+								};
+
+							Plotly.newPlot('plot-x', data, layout);
+
+							// 2) Histogram
+							var trace0 = {
+								x: y_dist,
+								type: 'histogram',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> %{x} </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+							}; 
+
+							var data = [trace0],
+								layout = {
+									xaxis: {showgrid: true, zeroline: false, fixedrange: true},
+									yaxis: {showgrid: true, showticklabels: true,zeroline: false, fixedrange: true},
+									bargap: 0.1,
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+									xaxis: {title: '<b>'+col2+'</b>', size: 15}
+								};
+
+							Plotly.newPlot('plot-y', data, layout);
+
+							// 3) boxplot vertical
+							var label_num = xy_dist1[0];
+							var final_labels = xy_dist1[1];
+							var data_ls = xy_dist1[2];
+
+							var data = [];
+							for (var i=0; i<label_num; i++){
+								eval("var trace"+i+"= {y:data_ls["+i+"], type:'box', name:"
+									+"final_labels["+i+"]"+
+									",hoverinfo:'y'}; data.push(trace"+i+");")
+							};
+
+							var layout = {
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								hovermode: 'closet',
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, type: 'category'},
+								yaxis: {title: '<b>'+col2+'</b>', size: 15},
+								hoverlabel:{
+									font: {size: 14, color:'white'}, bordercolor: 'white'
+
+								}
+							};
+
+							Plotly.newPlot('plot-x-y-1', data, layout);
+
+							// 4) violin
+							// create plot view (X-Y-2)
+							var label_num = xy_dist1[0];
+							var final_labels = xy_dist1[1];
+							var data_ls = xy_dist1[2];
+							var data = [];
+
+							for (var i=0; i<label_num; i++){
+								eval("var trace"+i+"= {y:data_ls["+i+"], type:'violin', box:{visible: false}, jitter:1, opacity: 0.7,name:"
+									+"final_labels["+i+"], hoverinfo:'y'}; data.push(trace"+i+");")
+							};
+
+							var layout = {
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								hovermode: 'closet',
+								yaxis: {
+									title: col2, font: {size: 15}
+								},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, type: 'category'},
+								yaxis: {title: '<b>'+col2+'</b>', size: 15},
+								hoverlabel:{
+									font: {size: 14, color:'white'}, bordercolor: 'white'
+								}
+							};
+
+							Plotly.newPlot('plot-x-y-2',data,layout);
+
+						} else if (version == 'Categorical_Categorical') {
+
+							// 1) X-bar chart
+							var trace0 = {
+								x: x_dist[0],
+								y: x_dist[1],
+								type: 'bar',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>',
+								};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									bargap :0.3,
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false, type: 'category'},
+								};
+
+							Plotly.newPlot('plot-x', data, layout);
+
+							// 2) Y-Bar chart
+							var trace0 = {
+								x: y_dist[0],
+								y: y_dist[1],
+								type: 'bar',
+								hoverinfo: 'x+y',
+								hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>',
+								};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									bargap :0.3,
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+								xaxis: {title: '<b>'+col2+'</b>', size: 15, autotick: false, type: 'category'},
+								};
+
+							Plotly.newPlot('plot-y', data, layout);
+
+							// 3) contingency table (crosstab) - heatmap
+							var X_ls = xy_dist1[0], 
+								Y_ls = xy_dist1[1], 
+								data_ls = xy_dist1[2];
+
+							var trace0 = {
+								z: data_ls,
+								x: X_ls,
+								y: Y_ls,
+								type: 'heatmap',
+								colorscale: 'YlGnBu',
+								reversescale: true,
+								// hoverongaps: false,
+								xgap :	1,
+  								ygap :	1,
+								hoverinfo: 'x+y+z',
+								hovertemplate: '<b style="text-align: left">'+col1+':</b>  %{x}  '+
+												'<br><b style="text-align: left">'+col2+':</b>  %{y}  '+
+												'<br><b style="text-align: left">Percent:</b>  %{z}%   <extra></extra>',
+							};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									// xaxis: {title: '<b>'+col1+'</b>', size: 15},
+									// yaxis: {title: '<b>'+col2+'</b>', size: 15},
+									xaxis: {title: '<b>'+col1+'</b>',size: 15,showgrid: false, zeroline: false,fixedrange: true, autotick: false, type: 'category'},
+									yaxis: {title: '<b>'+col2+'</b>',size: 15,showgrid: false, showticklabels: true, zeroline: false, fixedrange: true, autotick: false, type: 'category'},
+									hovermode:'closet',
+									hoverlabel:
+									{
+										// font: {size: 12},
+									}
+								};
+
+							Plotly.newPlot('plot-x-y-1', data, layout);
+
+							// 4) side bar / stacked bar
+
+							var X_ls = xy_dist2[0],
+								Y_ls = xy_dist2[1], 
+								label_num1 = xy_dist2[2],
+								data_ls = xy_dist2[3], 
+								mode = xy_dist2[4];
+
+							data = [];
+							for (i=0; i<label_num1; i++) {
+								eval("var trace"+i+"= {x:X_ls, y:data_ls["+i+"],"
+									+"name:Y_ls["+i+"], type:'bar',"
+									// +"hoverinfo: 'y', hovertemplate:'<b style='text-align: left'>%{y}</b><extra></extra>'"
+									// +"hoverinfo: 'y'"
+									+"}; data.push(trace"+i+")");
+							};
+
+							var layout = {
+								barmode: mode,
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								bargap :0.3,
+								// bargroupgap: 0.2,
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false, type: 'category'},
+								yaxis: {title: '<b>'+col2+'</b>', size: 15},
+								// hovermode: 'closest',
+								hoverinfo: 'y',
+								hovertemplate:"<b style='text-align: left'>%{y}</b><extra></extra>",
+								hoverlabel: {
+										// font: {size: 13, color:'white'}, bordercolor: 'white'
+									},
+								hovermode: 'x unified'
+								};
+
+							Plotly.newPlot('plot-x-y-2', data, layout);
+
+						} else if (version == 'Time_Categorical') { // time & categorical
+
+							// Time-count
+							var trace0 = {
+									type: 'scatter',
+									mode: 'lines',
+									x: x_dist[0],
+									y: x_dist[1],
+									hovertemplate:'<b style="text-align: left">Count:</b> %{y} <extra></extra>'
+								};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									xaxis: {
+										autorange: true,
+										range: x_dist[2],
+										rangeslider: {range: x_dist[2]},
+										type: 'date'
+									},
+									yaxis: {
+										autorange: true,
+										range: x_dist[3],
+										type: 'linear'
+									},
+										xaxis: {title: '<b>'+col1+'</b>', size: 15},
+										hovermode: 'x unified'
+								};
+
+							Plotly.newPlot('plot-x', data, layout);
+
+							// 2-2) bar chart
+
+							var trace0 = {
+								x: y_dist[0],
+								y: y_dist[1],
+								type: 'bar',
+								hoverinfo: 'y',
+								hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+												'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>',
+								// marker: {
+								// 	color: 'rgba(0, 138, 188, 0.7)',
+								// 	line: {
+								// 		color: '#008abc',
+								// 		width: 2
+								// 	}
+								// },
+								};
+
+							var data = [trace0],
+								layout = {
+									width: 600,
+									margin: { l: 50, r: 50, b: 50, t: 50 },
+									// showlegend: false,
+									bargap :0.3,
+									hovermode: 'closest',
+									hoverlabel: {
+										bgcolor: 'white',
+										bordercolor: '#D3D3D3',
+										font: {color: 'black'}
+									},
+								xaxis: {title: '<b>'+col2+'</b>', size: 15, autotick: false, type: 'category'},
+								};
+
+
+							Plotly.newPlot('plot-y', data, layout);
+
+							// 3) overlapping chart
+
+							var X_ls = xy_dist1[0],
+								Y_ls = xy_dist1[1], 
+								data_ls = xy_dist1[2], 
+								label_num = xy_dist1[3],
+								X_range = xy_dist1[4];
+
+							data = [] ;
+							for (i=0; i<label_num; i++) {
+								eval("var trace"+i+"= {x:X_ls, y:data_ls["+i+"], type:'scatter', fill:'tozeroy',"+
+									 "mode:'none',name:Y_ls["+i+"]}; data.push(trace"+i+");")
+							};
+
+							var layout = {
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								xaxis: {
+									autorange: true,
+									range: X_range,
+									type: 'date'
+								},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15},
+								yaxis: {title: '<b>'+col2+'</b>', size: 15},
+								hovermode: 'x unified'
+							};
+
+							Plotly.newPlot('plot-x-y-1', data, layout);
+
+							// stacked bar
+
+							data = [];
+							for (i=0; i<label_num; i++) {
+								eval("var trace"+i+"= {x:X_ls, y:data_ls["+i+"],"
+									+"name:Y_ls["+i+"], type:'bar'}; data.push(trace"+i+")");
+							};
+
+							var layout = {
+								width: 600,
+								margin: { l: 50, r: 50, b: 50, t: 50 },
+								bargap :0.3,
+								xaxis: {
+									autorange: true,
+									range: X_range,
+									type: 'date'
+									},
+								xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false},
+								yaxis: {title: '<b>'+col2+'</b>', size: 15},
+								// hoverlabel
+								barmode: 'stack',
+								hovermode: 'x unified'
+								};
+
+							Plotly.newPlot('plot-x-y-2', data, layout);
+						}
+					}
+				}
+			};
+		</script>
+</html>

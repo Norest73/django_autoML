@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> MOBIS AI 자동화툴 </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<style>
+
+			#wrapper {
+				display: flex;
+				font-family: Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+			}
+
+			.sidebar {
+				width: 14rem!important;
+				min-height: 100vh;
+				background-color: #4e73df;
+				background-size: cover;
+				display: flex;
+				flex-direction: column;
+				padding-left: 0;
+				margin-bottom: 0;
+				margin-top: 0;
+				box-sizing: border-box;
+				font-size: 1rem;
+				font-weight: 600;
+				line-height: 1.5;
+				text-align: left;
+			}
+
+			.sidebar-brand {
+				color: #fff;
+				height: 3.5rem;
+				padding: 1rem;
+				padding-bottom: 0.5rem;
+				text-align: center;
+				align-items: center!important;
+				display: flex!important;
+				justify-content: center!important;
+			}
+
+			.sidebar-brand-text {
+				display: inline;
+				margin-left: 0.5rem;
+				margin-right: 0.5rem;
+				font-size: 2rem;
+				font-weight: 600;
+				text-align: center;
+  				letter-spacing: .05rem;
+  				list-style: none;
+			}
+
+			.sidebar-divider {
+				margin: 0 0.5rem;
+				border-color : rgba(255,255,255,.30);
+			}
+
+			.nav-item {
+				position: relative;
+				box-sizing: border-box;
+			}
+
+			.nav-link {
+				color: #fff;
+				font-weight: 600;
+				font-size: 0.9rem;
+				margin-top: 1.5rem;
+				margin-left: 0.3rem;
+				padding: 1rem;
+				width: 14rem;
+				display: flex;
+				align-items: center!important;
+				text-align: left;
+			}
+
+			.used {
+				width: 182px;
+				background-color: rgba(32, 60, 153, 0.75)!important;
+			}
+
+			.unused {
+				color: rgb(129, 148, 201)!important;
+			}
+
+			span {
+				font-size: 1rem;
+				padding-left: 0.8rem;
+				display: inline;
+			}
+
+			a.nav-link i {
+				width:35px;
+				text-align: center;
+			}
+
+			#content-wrapper {
+				background-color: rgb(246, 247, 250);
+				padding-left: 1.5rem;
+				padding-right: 1.5rem;
+				width: 100%;
+				margin-right: auto;
+				margin-left: auto;
+				box-sizing: border-box;
+			}
+
+			#content-head {
+				height: 80px;
+				color: #5a5c69!important;
+				font-size: 1rem;
+				font-weight: 500;
+				line-height: 1.2;
+				display: flex;
+				align-items: flex-end!important;
+				min-width: 1500px;
+			}
+
+			.content-divider {
+				margin: 0rem;
+				border-color : rgba(255,255,255,.30);
+			}
+
+			.shadow {
+				box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15)!important;
+			}
+
+			.card {
+				width: 1200px;
+				margin-top: 20px;
+				position: relative;
+				display: flex;
+				flex-direction: column;
+				word-wrap: break-word;
+				background-color: #fff;
+				background-clip: border-box;
+				border: 1px solid #e3e6f0;
+				border-radius: .35rem;
+				box-sizing: border-box;
+			}
+
+			.card-header {
+				border-radius: calc(.35rem - 1px) calc(.35rem - 1px) 0 0;
+				padding-bottom: 1rem!important;
+				padding-top: 1rem!important;
+				padding: .75rem 1.25rem;
+			    margin-bottom: 0;
+			    background-color: #f8f9fc;
+			    border-bottom: 1px solid #e3e6f0;
+			    color: #4e73df!important;
+			    font-weight: 700!important;
+			    font-size: 1.25rem;
+			    margin: 0!important;
+			}
+
+			.card-body {
+				padding: .75rem 1.25rem;
+				height: 600px;
+				margin: auto;
+			}
+
+			.card-body-form {
+				height: 100%;
+				align-items: center!important;
+			}
+
+
+		</style>
+
+	</head>
+	<body>
+		<div id="wrapper">
+			<!-- Sidebar -->
+			<ul class="sidebar" id="accordionSidebar">
+				<!-- Sidebar - Brand -->
+				<a class="sidebar-brand" href="#" style="text-decoration:none">
+					<div class="sidebar-brand-icon">
+						<i class="fas fa-chart-bar fa-3x"></i>
+
+					</div>
+					<div class="sidebar-brand-text">
+						AutoML
+					</div>
+				</a>
+				<!-- Divider -->
+				<hr class="sidebar-divider">
+				<!-- Dashboard -->
+				<li class="nav-item active">
+					<a class="nav-link used" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo" style="text-decoration:none">
+						<i class="far fa-file-excel fa-2x" style="width:35px; text-align: center;"></i>
+						<span>DATA UPLOAD</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-chart-line fa-2x"></i>
+						<span>DATA <br>EXPLORATION</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-cogs fa-2x"></i>
+						<span>FEATURE <br> ENGINEERING</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-dice-d6 fa-2x"></i>
+						<span>MODELING</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="far fa-paper-plane fa-2x"></i>
+						<span>RESULT</span>
+					</a>
+					<a class="nav-link unused" href="#" style="text-decoration:none">
+						<i class="fas fa-robot fa-2x"></i>
+						<span>SIMULATION</span>
+					</a>
+				</li>
+			</ul>
+
+			<!-- End of Sidebar -->
+			<!-- Content Wrapper -->
+			<div id="content-wrapper">
+				<!-- Main contents -->
+				<div id="content-head">
+					<!-- Page Heading -->
+					<h1 id="content-headline" style="margin: 21.5px 0">1. DATA UPLOAD</h1>
+					<p style="font-size: 1.2rem; padding-left: 20px; margin: 21.5px 0"> Please upload the target data to begin data analysis. The file format is based on the csv file. </p>
+				</div>
+				<hr class="content-divider">
+
+				<!-- Contents -->
+				<div class="card shadow">
+					<div class="card-header"> DataTables </div>
+					<div class="card-body"> 
+						<div class="card-body-form">
+							<form action="./DataTable/" method="post" id="DATA" enctype="multipart/form-data" style="margin-top:250px;"> {% csrf_token %}
+								<input type="file" name="file" id="file">
+								<input type="submit" class="submitCSV">
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+
+

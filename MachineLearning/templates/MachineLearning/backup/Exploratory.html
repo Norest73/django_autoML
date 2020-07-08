@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> AutoML </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+		<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+		<style>
+			#wrapper {
+				font-family: Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+				box-sizing: border-box;
+			}
+
+			#Topbar {
+				display: flex;
+				margin-top: 0;
+				height: 64px;
+				width: 100vw;
+				background-color: rgb(249, 249, 249);
+				position: fixed;
+				border-bottom: solid 1px rgb(200, 200, 200);
+				top:0;
+				left: 1px;
+				z-index: 2;
+			}
+
+			.TopBrand {
+				color: rgb(100, 100, 100);
+				padding: 10px 10px 10px 15px;
+				display: flex;
+				font-size: 30px;
+				font-weight: 600;
+				align-items: center;
+				text-align: center;
+			}
+
+			.TopBrand-divider{
+				border-right: solid 1px rgb(200, 200, 200);
+				height: 30px;
+				margin: 17px 0 17px 5px;
+			}
+
+			.Topbar-subject {
+				font-size: 24px;
+				font-weight: 600;
+				min-width: 200px;
+				margin: 18px 0 0 10px;
+				color: rgb(100, 100, 100);
+			}
+
+			.Topbar-back {
+				text-align: center;
+				color: rgb(100, 100, 100);
+				height: 37px;
+				min-width : 37px;
+				margin-top: 15px;
+				margin-left: 70%;
+				padding: 5px 0 3px 1px;
+				font-size: 11px;
+				border: 3px solid rgb(100, 100, 100);
+				border-radius: 50%;
+				box-sizing: border-box;
+			}
+
+			.Topbar-next {
+				padding: 7px 0 3px 3px;
+				text-align: center;
+				height: 37px;
+				min-width : 37px;
+				color: rgb(100, 100, 100);
+				margin: 15px 0 0 15px;
+				font-size: 11px;
+				border: 3px solid rgb(100, 100, 100);
+				border-radius: 50%;
+				box-sizing: border-box;
+			}
+
+			.Topbar-forward {
+				padding: 5px 0 3px 3px;
+				text-align: center;
+				height: 37px;
+				min-width : 37px;
+				color: rgb(100, 100, 100);
+				margin: 15px 0 0 15px;
+				font-size: 11px;
+				border: 3px solid rgb(100, 100, 100);
+				border-radius: 50%;
+				box-sizing: border-box;
+			}
+
+
+			#Sidebar {
+				top: 0;
+				left: 0;
+				margin-top: 65px;
+				width: 220px;
+				height: 100vh;
+				background-color: rgb(241, 241, 241);
+				position: fixed;
+				overflow: hidden;
+				z-index: 1;
+			}
+
+			.nav-link {
+				height: 33px;
+				padding: 20px 0 10px 5px;
+				color: rgb(150, 150, 150);
+				font-weight: 400;
+				font-size: 12px;
+				display: block;
+				align-items: center;
+				align-content: center;
+				text-align: left;
+			}
+
+			.nav-link.used {
+				background-color: rgb(230, 230, 230);
+				padding-left: 0px!important;
+				border-left: solid 3px blue;
+				color: black!important;
+			}
+
+			.nav-link>span {
+				padding-left: 3px;
+				display: inline-block;
+				padding-bottom: 10px;
+				font-size: 14px;
+				font-weight: 500;
+				vertical-align: middle;
+			}
+
+			.nav-link>i {
+				padding-left: 3px;
+				width: 35px;
+				text-align: center;
+			}
+
+			.nav-link-details {
+				display: block;
+				height: 20px;
+				padding: 5px 0 5px 50px;
+				color: rgb(150, 150, 150);
+				font-weight: 400;
+				font-size: 14px;
+				align-items: center;
+				align-content: center;
+				text-align: left;
+			}
+
+			.nav-link-details.used {
+				color: black;
+				font-weight: 600;
+				font-size: 14px;
+			}
+
+			.nav-link-details>span {
+				padding-left: 5px;
+				text-align: left;
+			}
+
+			.Sidebar-button {
+				padding: 20px 0;
+				cursor:pointer; 
+				color: rgb(150, 150, 150);
+				text-align: center;
+
+			}
+
+			#Analysis-bar {
+				top: 0;
+				left: 220px;
+				margin-top: 65px;
+				width: 0px;
+				height: 100vh;
+				background-color: rgb(230, 230, 230);
+				position: fixed;
+				overflow: hidden;
+				z-index: 1;
+			}
+
+			#main-content {
+				margin-top: 70px;
+				margin-left: 220px;
+				background-color: white;
+				height: 100%;
+				z-index: 0;
+			}
+
+			.data-table {
+				height: 800px;
+				border: 1px solid rgb(220, 220, 220);
+			}
+
+			.data-table-head {
+				padding: 16px 20px;
+			    background-color: rgb(229, 244, 249);
+			    border-bottom: 1px solid rgb(200, 200, 200);
+			    color: rgb(0, 124, 168);
+			    font-weight: 600!important;
+			    font-size: 20px;
+			}
+
+			.data-table-body {
+				padding-top: 330px;
+				text-align: center;
+				margin: auto;	
+			}
+
+			.main-table {
+				width: 100%;
+			}
+
+			.table1 {
+				display: block;
+				float: left;
+				font-size: 1rem;
+				font-weight: 400;
+				border-collapse: collapse;
+				border: 0.5px solid rgb(223,227,230);
+				margin: 0;
+				table-layout: fixed!important;
+				background-color: #fff;
+			}
+
+			.colnames {
+				width: 138px!important;
+				min-width: 138px!important;
+				max-width: 138px!important;
+				table-layout: fixed!important;
+				padding: 8px 18px 4px 18px;
+				height: 27px;
+				font-weight: 500;
+				font-size: 16px;
+				text-align: left;
+				background-color: rgb(242, 245, 245);
+				border: 0.5px solid rgb(223,227,230);
+			}
+
+			.colnames span {
+				display: inline-block;
+				width: 55%;
+				text-overflow:ellipsis;
+				overflow:hidden;
+			}
+
+			.colnames select {
+				height: 21px;
+				text-align: right;
+				float: right;
+				width: 42%;
+				font-size: 12px;
+				font-weight: 400;
+				background-color: rgb(242, 245, 245);
+				color: gray;
+				border: none;
+			}
+
+			.table1 td{
+				width: 138px!important;
+				min-width: 138px!important;
+				max-width: 138px!important;
+				padding: 2px 0;
+				border: 0.5px solid rgb(223,227,230);
+			}
+
+			.table1 div{
+				font-weight: 400;
+				font-size: 12px;
+			}
+
+			.table2 {
+				float: left;
+				margin: 0;
+				border-collapse: collapse;
+				table-layout: fixed!important; 
+				text-overflow:ellipsis;
+				white-space:nowrap;
+				word-wrap:normal;
+				overflow: visible!important;
+			}
+
+			#j-datatable_wrapper {
+				display: table!important;
+			}
+
+			.table2 th {
+				width: 138px!important;
+				min-width: 138px!important;
+				max-width: 138px!important;
+				border-left: 0.5px solid rgb(223,227,230);
+				border-right: 0.5px solid rgb(223,227,230);
+				background-color: rgb(242, 245, 245);
+				word-wrap:normal;
+				overflow: hidden!important;
+				font-size: 0.5rem;
+				font-weight: 500!important;
+				height: 0.75rem;
+				text-align: right;
+				line-height: 0rem;
+			}
+
+			.table2 td {
+				width: 138px!important;
+				min-width: 138px!important;
+				max-width: 138px!important;
+				margin-left: 0!important;
+				line-height: 5px;
+				padding: 0 18px 0 18px!important;
+				text-overflow:ellipsis;
+				white-space:nowrap;
+				word-wrap:normal;
+				overflow: hidden!important;
+				text-align: right;
+				font-size: 0.8rem;
+				font-weight: 400;
+			}
+
+			.sorting_1, .sorting_asc, .sorting_desc {
+				color: black!important;
+				font-size: 0.9rem!important;
+				font-weight: 600!important;
+			}
+
+			#target-select-subject {
+				font-size: 24px;
+				font-weight: 600;
+				width: 300px;
+				height: 50px;
+				margin: 0 0 0 10px;
+				padding-top: 10px;
+				color: black;
+			}
+
+			#target-select-contents span {
+				font-size: 16px;
+				font-weight: 500;
+				width: 300px;
+				height: 50px;
+				margin: 0 0 0 10px;
+				padding-top: 10px;
+				color: gray;
+			}
+
+			#target-feature {
+				width: 210px;
+				height: 35px;
+				font-size: 15px;
+				font-weight: 400;
+				color: gray;
+				border: 1px solid rgb(150, 150, 150);
+				border-radius: 5px;
+			}
+
+			#dtype-confirm-subject {
+				font-size: 24px;
+				font-weight: 600;
+				width: 300px;
+				height: 50px;
+				margin: 0 0 0 10px;
+				padding-top: 30px;
+				color: black;
+
+			}
+
+			#dtype-table {
+				min-width: 95%;
+				border-collapse: collapse;
+				table-layout: fixed!important;
+			}
+
+			#dtype-table th{
+				color: rgb(100, 100, 100);
+				border-collapse: collapse;
+				margin: 0;
+				table-layout: fixed!important;
+				padding: 4px 18px 4px 18px;
+				height: 35px;
+				font-weight: 500;
+				font-size: 20px;
+				text-align: left;
+				background-color: rgb(242, 245, 245);
+				border-bottom: 0.5px solid rgb(223,227,230);		
+			}
+
+			#dtype-table td{
+				color: rgb(50, 50, 50);
+				border-collapse: collapse;
+				margin: 0;
+				table-layout: fixed!important;
+				padding: 8px 18px 4px 18px;
+				height: 35px;
+				font-weight: 500;
+				font-size: 16px;
+				text-align: left;
+				border-bottom: 0.5px solid rgb(223,227,230);		
+			}
+
+			#dtype-table td select {
+				width: 70%;
+				height: 30px;
+				font-size: 15px;
+				font-weight: 600;
+				border: 1px solid rgb(150, 150, 150);
+				border-radius: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="wrapper">
+			<form action="#" method="post" id="DATA" enctype="multipart/form-data"> {% csrf_token %}
+				<!-- Topbar -->
+				<div id="Topbar">
+					<a class="TopBrand" href="../" style="text-decoration:none">
+						<div class="sidebar-brand-icon">
+							<i class="fas fa-chart-bar fa-1x"></i>
+						</div>
+						<div class="sidebar-brand-text" style="padding-left: 5px">
+							M<span style="color: red;">O</span>AM
+						</div>
+					</a>
+					<div class="TopBrand-divider"> </div>
+					<div class="Topbar-subject">
+						 Target Selection
+					</div>
+
+					<a class="Topbar-back" href="javascript:goBack()" title="Back">
+						<i class="fas fa-step-backward fa-2x"></i>
+					</a>
+
+					<a class="Topbar-next" href="#" title="Next" style="font-size: 9px;">
+						<i class="fas fa-play fa-2x"></i>
+					</a>
+
+					<a class="Topbar-forward" href="#" title="Auto Skip">
+						<i class="fas fa-forward fa-2x"></i>
+					</a>
+
+				</div>
+				<div id="Sidebar">
+					<div class="Sidebar-block">
+						<a class="nav-link used" href="#" style="text-decoration:none;">
+							<i class="fas fa-chart-line fa-2x"></i>
+							<span>DATA EXPLORATION</span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> CSV File Load </span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Data Table </span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Target Selection </span>
+						</a>
+						<a class="nav-link-details used"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Exploratory Analysis </span>
+						</a>
+					</div>
+					<div class="Sidebar-block">
+						<a class="nav-link unused" href="#" style="text-decoration:none">
+							<i class="fas fa-cogs fa-2x"></i>
+							<span>FEATURE ENGINEERING</span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span>Feature Selection</span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Handling Null </span>
+						</a>
+					</div>
+					<div class="Sidebar-block">
+						<a class="nav-link unused" href="#" style="text-decoration:none">
+							<i class="fas fa-dice-d6 fa-2x"></i>
+							<span>MODELING</span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Optimization Method </span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Result </span>
+						</a>
+
+					</div>
+					<div class="Sidebar-block">
+						<a class="nav-link unused" href="#" style="text-decoration:none">
+							<i class="fas fa-robot fa-2x"></i>
+							<span>SIMULATION</span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Model Load </span>
+						</a>
+						<a class="nav-link-details"  href="#" style="text-decoration:none;"> 
+							<i class="fas fa-caret-right"></i>
+							<span> Simulate </span>
+						</a>
+					</div>
+
+					<div class="Sidebar-button">
+						<i class="far fa-arrow-alt-circle-left fa-2x"></i>
+					</div>
+				</div>
+
+				<div id="main-content">
+				</div>
+			</form>
+		</div>
+		<script>
+			var target = {{target|safe}};
+			var dtypes = {{dtypes|safe}};
+			$('#main-content').append(target[0]);
+			$('#main-content').append(dtypes);
+
+			$('.Topbar-next').hover(function(){
+				$(this).css('color', 'black');
+			});
+
+
+			$('.Sidebar-button').on('click', function(){
+			    if( $('#Sidebar').width() > 200 ) {
+					$('.nav-link>span').hide()
+			    	$('.nav-link-details').hide()
+			        $('#Sidebar').animate({ 'width': '50px' }, 400,);
+			        $('#main-content').animate({ 'margin-left': '50px' }, 400);
+			        $('.fa-arrow-alt-circle-left').addClass('fa-arrow-alt-circle-right')
+			        $('.fa-arrow-alt-circle-left').removeClass('fa-arrow-alt-circle-left')
+			    }
+
+			    else {
+			        $('#Sidebar').animate({ 'width': '220px' }, 400, function(){
+			        	 $('.nav-link>span').show()
+			        	 $('.nav-link-details').show()
+			        });
+			        $('#main-content').animate({ 'margin-left': '220px' }, 400);
+			       	$('.fa-arrow-alt-circle-right').addClass('fa-arrow-alt-circle-left')
+			        $('.fa-arrow-alt-circle-right').removeClass('fa-arrow-alt-circle-right')
+			    }
+			});
+
+			function goBack(){
+				window.history.back();
+			}
+		</script>
+	</body>
+</html>

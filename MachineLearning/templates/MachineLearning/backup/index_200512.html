@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> AutoML </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sidebar/3.3.2/jquery.sidebar.min.js"></script>
+		<style>
+			#wrapper {
+				font-family: Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+				box-sizing: border-box;
+			}
+
+			#Topbar {
+				display: flex;
+				margin-top: 0;
+				height: 64px;
+				width: 100vw;
+				background-color: rgb(249, 249, 249);
+				position: fixed;
+				border-bottom: solid 1px rgb(200, 200, 200);
+				top:0;
+				left: 1px;
+			}
+
+			.TopBrand {
+				color: rgb(100, 100, 100);
+				padding: 10px 10px 10px 15px;
+				display: flex;
+				font-size: 30px;
+				font-weight: 600;
+				align-items: center;
+				text-align: center;
+			}
+
+			.TopBrand-divider{
+				border-right: solid 1px rgb(200, 200, 200);
+				height: 30px;
+				margin: 17px 0 17px 5px;
+			}
+
+			.Topbar-subject {
+				font-size: 24px;
+				font-weight: 600;
+				width: 200px;
+				margin: 18px 0 0 10px;
+				color: rgb(100, 100, 100);
+			}
+
+			#Sidebar {
+				top: 0;
+				left: 1px;
+				margin-top: 65px;
+				width: 220px;
+				height: 100vh;
+				background-color: rgb(241, 241, 241);
+				position: fixed;
+				overflow: hidden;
+			}
+
+			.nav-link {
+				height: 33px;
+				padding: 20px 0 20px 5px;
+				color: rgb(150, 150, 150);
+				font-weight: 400;
+				font-size: 12px;
+				display: block;
+				align-items: center;
+				align-content: center;
+				text-align: left;
+			}
+
+			.used {
+				background-color: rgb(230, 230, 230);
+				padding-left: 0px!important;
+				border-left: solid 3px blue;
+				color: black!important;
+			}
+
+			.unused {
+			}
+
+			.nav-link>span {
+				padding-left: 3px;
+				display: inline-block;
+				padding-bottom: 10px;
+				font-size: 14px;
+				font-weight: 500;
+				vertical-align: middle;
+			}
+
+			.nav-link>i {
+				padding-left: 3px;
+				width: 35px;
+				text-align: center;
+			}
+
+			.Sidebar-button {
+				cursor:pointer; 
+				color: rgb(150, 150, 150);
+				text-align: center;
+			}
+
+			#main-content {
+				margin-top: 70px;
+				margin-left: 220px;
+				background-color: white;
+				height: 100%;
+			}
+
+			.data-table {
+				height: 800px;
+				border: 1px solid rgb(220, 220, 220);
+			}
+
+			.data-table-head {
+				padding: 16px 20px;
+			    background-color: rgb(242, 245, 245);
+			    border-bottom: 1px solid rgb(200, 200, 200);
+			    color: rgb(64, 157, 190);
+			    font-weight: 600!important;
+			    font-size: 20px;
+			}
+
+			.data-table-body {
+				padding-top: 330px;
+				text-align: center;
+				margin: auto;	
+			}
+
+
+
+
+		</style>
+	</head>
+	<body>
+		<div id="wrapper">
+			<!-- Topbar -->
+			<div id="Topbar">
+				<a class="TopBrand" href="" style="text-decoration:none">
+					<div class="sidebar-brand-icon">
+						<i class="fas fa-chart-bar fa-1x"></i>
+					</div>
+					<div class="sidebar-brand-text" style="padding-left: 5px">
+						M<span style="color: rgb(255, 53, 5">O</span>AM
+					</div>
+				</a>
+				<div class="TopBrand-divider"> </div>
+				<div class="Topbar-subject">
+					 DATA UPLOAD
+				</div>
+			</div>
+			<div id="Sidebar">
+				<a class="nav-link used" href="#" style="text-decoration:none; padding-top: 30px">
+					<i class="far fa-file-excel fa-2x"></i>
+					<span>DATA UPLOAD</span>
+				</a>
+				<a class="nav-link unused" href="#" style="text-decoration:none">
+					<i class="fas fa-chart-line fa-2x"></i>
+					<span>DATA EXPLORATION</span>
+				</a>
+				<a class="nav-link unused" href="#" style="text-decoration:none">
+					<i class="fas fa-cogs fa-2x"></i>
+					<span>FEATURE ENGINEERING</span>
+				</a>
+				<a class="nav-link unused" href="#" style="text-decoration:none">
+					<i class="fas fa-dice-d6 fa-2x"></i>
+					<span>MODELING</span>
+				</a>
+				<a class="nav-link unused" href="#" style="text-decoration:none">
+					<i class="far fa-paper-plane fa-2x"></i>
+					<span>RESULT</span>
+				</a>
+				<a class="nav-link unused" href="#" style="text-decoration:none">
+					<i class="fas fa-robot fa-2x"></i>
+					<span>SIMULATION</span>
+				</a>
+
+				<div class="Sidebar-button">
+					<i class="far fa-arrow-alt-circle-left fa-2x"></i>
+				</div>
+			</div>
+
+			<div id="main-content">
+				<div class="data-table">
+					<div class="data-table-head"> DataTable </div>
+					<div class="data-table-body">
+						<form action="./DataTable/" method="post" id="DATA" enctype="multipart/form-data"> {% csrf_token %}
+							<input type="file" name="file" id="file">
+							<input type="submit" class="submitCSV">
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			$('.Sidebar-button').on('click', function(){
+			    if( $('#Sidebar').width() > 200 ) {
+			    	$('.nav-link>span').hide()
+			        $('#Sidebar').animate({ 'width': '50px' }, 400,);
+			        $('#main-content').animate({ 'margin-left': '50px' }, 400);
+			        $('.fa-arrow-alt-circle-left').addClass('fa-arrow-alt-circle-right')
+			        $('.fa-arrow-alt-circle-left').removeClass('fa-arrow-alt-circle-left')
+			    }
+			    else {
+			        $('#Sidebar').animate({ 'width': '220px' }, 400, function(){
+			        	 $('.nav-link>span').show()
+			        });
+			        $('#main-content').animate({ 'margin-left': '220px' }, 400);
+			       	$('.fa-arrow-alt-circle-right').addClass('fa-arrow-alt-circle-left')
+			        $('.fa-arrow-alt-circle-right').removeClass('fa-arrow-alt-circle-right')
+			    }
+			});
+		</script>
+	</body>
+</html>

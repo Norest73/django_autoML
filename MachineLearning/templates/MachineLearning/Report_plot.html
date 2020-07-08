@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> AutoML </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+		<style>
+			body {
+				margin: 0 0;
+			}
+
+			body {
+				width: 100%;
+				height: calc(100vh - 65px);
+				/*min-height: calc(100vh - 65px);*/
+				margin: 0 0;
+				/*background-color: rgba(245,245,245,0.1);*/
+			}
+
+			/*스크롤바 설정*/
+			body::-webkit-scrollbar {
+			  width: 6px;
+			}
+			body::-webkit-scrollbar-track {
+			  background-color: transparent;
+			}
+			body::-webkit-scrollbar-thumb {
+			  border-radius: 3px;
+			  background-color: gray;
+			}
+			body::-webkit-scrollbar-button {
+			  width: 0;
+			  height: 0;
+			}
+
+			.plots-all {
+				width: 600px;
+				height: 500px;
+				clear: both;
+				margin: 0 auto;
+			}
+
+			/*.plots-text {
+				width: 100%;
+				height: 70%;
+				float: left;
+				margin: 0 auto;
+			}*/
+
+			.plots-plot {
+				/*float: right;*/
+				width: 100%;
+				height: 65%;
+				/*float: right;*/
+				margin: 0 auto;
+				/*display: table;*/
+			}
+
+			.top-text {
+				width: 100%;
+				height: 10%;
+				font-weight: 600;
+				font-size: 22px;
+				vertical-align: middle;
+				margin: 15px -0 -15px 0;
+				/*line-height: 70px;*/
+				/*margin: 0 -15px 0 15px;*/
+				/*vertical-align: middle;*/
+				/*margin: 30px 15px -30px 15px;*/
+				/*display: table-cell;
+				vertical-align: middle;*/
+			}
+
+			.bottom-text {
+				width: 95%;
+				height: 25%;
+				/*margin: 0 -15px 0 15px;*/
+				font-size: 13px;
+				margin: 25px -10px -25px 10px;
+				color: rgb(60,60,60);
+				line-height: 1.7;
+			}
+
+			.plot-text {
+				/*float: right;*/
+				width: 100%;
+				height: 90%;
+				/*float: right;*/
+				margin: 0 auto;
+				/*display: table;*/
+			}
+
+			.plots-plot5 {
+				width: 100%;
+				height: 350px;
+				margin: 0 auto;
+			}
+
+			.bottom-text5 {
+				width: 95%;
+				height: 120px;
+				font-size: 13px;
+				margin: 20px -10px -20px 10px;
+				color: rgb(60,60,60);
+				line-height: 1.7;
+			}
+
+			.top-text5 {
+				width: 100%;
+				height: 50px;
+				font-size: 20px;
+				font-weight: 600;
+				/*line-height: 1.7;*/
+				text-align: center;	
+				margin: 20px 0 -20px 0;
+			}
+
+			.blanks-all {
+				width: 100%;
+				height: 60px;
+				clear: both;
+			}
+
+			.blanks-only {
+				width: 100%;
+				height: 85px;
+				clear: both;
+				line-height: 50px;
+				font-weight: 700;
+				font-size: 30px;
+				margin: 15px 0 -15px 0;
+			}
+
+			.blanks-blank {
+				height: 30px;
+				width: 100%;
+			}
+
+			table.modeling_result{
+				width: 100%;
+				height: 220px;
+				margin: 40px 0 -40px 0;
+				border-collapse: collapse;
+				border-top: 0.5px solid #f0f0f0;
+				table-layout: fixed;
+			}
+
+			.score_text {
+				height: 40px;
+				text-align: center;
+				/*border-bottom: 1px solid #3c3c3c;*/
+				font-weight: 600;
+				font-size: 20px;
+			}
+
+			.score_plot {
+				border-bottom: 1px solid #f0f0f0;
+			}
+
+			table.explain-table {
+				width: 100%;
+				margin: 50px 0 -50px 0;
+				border-collapse: collapse;
+				border-top: 0.5px solid #f0f0f0;
+			}
+
+			tr.explain-top {
+				height: 30px;
+				font-weight: 600;
+				font-size: 15px;
+				border-bottom: 1px solid #f0f0f0;
+				text-align: center;
+				background-color: #f0f0f0
+			}
+
+			tr.explain-bottom{
+				font-size: 12px;
+				border-bottom: 1px solid #f0f0f0;
+			}
+
+			/*table.explain-table td {
+				border: 1px solid #f0f0f0;
+			}*/
+
+		</style>
+	</head>
+	<body id='plot-body'> 
+		{% csrf_token %}
+		<div class="blanks-only">&nbsp; Report</div>
+		<div class="plots-all" style="height:300px">
+			<div class="top-text">1. Modeling Result</div>
+			<table class="modeling_result">
+				<tr>
+					<td class='score_text'>Accuracy</td>
+					<td class='score_text'>F1 Score</td>
+				</tr>
+				<tr>
+					<td class='score_plot' id='acc_plot'></td>
+					<td class='score_plot' id='f1_plot'></td>
+				</tr>
+			</table>
+		</div>
+		<div class='blanks-blank'></div>
+
+		<div class="plots-all">
+			<div class="top-text">2. Confusion Matrix</div>
+			<div class="plots-plot" id="conf_plot"></div>
+			<div class="bottom-text" id="conf_text"></div>
+		</div>
+		<div class='blanks-blank'></div>
+
+		<div class="plots-all" style="height: auto;">
+			<div class="top-text">3. Feature Explanation</div>
+			<table class="explain-table">
+				<tr class="explain-top">
+					<td>Feature</td>
+					<td>Type</td>
+					<td>Unique</td>
+					<td>Missing</td>
+					<td>Description</td>
+				</tr>
+				{% for explain in explain_zip %}
+					<tr class="explain-bottom">
+						<td>{{explain.0}}</td>
+						<td>{{explain.1}}</td>
+						<td>{{explain.2}}</td>
+						<td>{{explain.3}}</td>
+						<td>{{explain.4}}</td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+		<div class='blanks-blank' style="height:100px"></div>
+
+		<div class="plots-all" style="height: 800px;">
+			<div class="top-text" >4. Feature Importance</div>
+			<div class="plots-plot" id="FI_plot" style="margin: -40px 0 40px 0"></div>
+			<div class="bottom-text" id="FI_text" style="margin: 80px 0 0 0"></div>
+		</div>
+		<div class='blanks-blank'></div>
+
+		<div class="plots-all" id='for-plot5' style='height: 600px;'>
+			<div class="top-text" style='height: 80px;'>5. Distribution Plots</div>
+			<div class='slider-div' id='slider-div'>
+				<script type="text/javascript">
+					var feature_name = {{feature_name | safe}};
+					var distplot_ls = {{distplot_ls | safe}};
+					for (var i=feature_name.length -1 ; i>=0; i--) {
+						document.write("<div class='plot-text' id='"+"plot-text-"+i.toString()+"' style='height: 520px;'><div class='top-text5' id='top5-"+i.toString()+"'></div><div class='plots-plot5' id='"+
+							"plot5-"+i.toString()+"'></div><div class='bottom-text5' id='"+"text5-"+i.toString()+"'></div></div>");
+					};
+				</script>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		// acc_plot & f1_plot
+		var mean_acc = {{mean_acc | safe}};
+		var trace0 = {
+			values: mean_acc,
+			labels: [mean_acc[0], null],
+			text: [null, null],
+			textinfo:'text',
+			hole: .87,
+			type: 'pie',
+			marker: {
+				colors: ['#1f77b4','#f1f2f3']
+			}
+		};
+		var data = [trace0],
+			layout = {
+				// width: 200,
+				showlegend: false,
+				margin: { l: 20, r: 20, b: 20, t: 20 },
+				hovermode: false,
+			annotations: [
+				{
+					showarrow: false,
+					text: '<b>'+mean_acc[0]+'%</b>',
+					font:
+					{
+						size: 15
+					}
+				}
+			]
+			};
+
+		Plotly.newPlot('acc_plot', data, layout, {displayModeBar: false});
+
+		var mean_f1 = {{mean_f1 | safe}};
+		var trace0 = {
+			values: mean_f1,
+			labels: [mean_f1[0], null],
+			text: [null, null],
+			textinfo:'text',
+			hole: .87,
+			type: 'pie',
+			marker: {
+				colors: ['#1f77b4','#f1f2f3']
+			}
+		};
+		var data = [trace0],
+			layout = {
+				// height: 200,
+				showlegend: false,
+				margin: { l: 20, r: 20, b: 20, t: 20 },
+				hovermode: false,
+			annotations: [
+				{
+					showarrow: false,
+					text: '<b>'+mean_f1[0]+'%</b>',
+					font:
+					{
+						size: 15
+					}
+				}
+			]
+			};
+
+		Plotly.newPlot('f1_plot', data, layout, {displayModeBar: false});
+
+		// confusion matrix
+		var conf_values = {{confusion_matrix | safe}};
+		var conf_labels = {{confusion_labels_XY | safe}};
+
+		var trace0 = {
+			z: conf_values,
+			x: conf_labels[0],
+			y: conf_labels[1],
+			text: ['0','1','2','3'],
+			type: 'heatmap',
+			colorscale: 'YlGnBu',
+			reversescale: true,
+			xgap:1,
+			ygap:1,
+			hoverinfo: 'x+y+z'
+		};
+		var data = [trace0],
+			layout = {
+				// width: 500,
+				// height: 300,
+				margin: { l: 50, r: 50, b: 50, t: 50 },
+				annotations: [],
+				// xaxis: {title: '<b>'+col1+'</b>', size: 15},
+				// yaxis: {title: '<b>'+col2+'</b>', size: 15},
+				xaxis: {size: 15,showgrid: false, zeroline: false,fixedrange: true, autotick: false, type: 'category'},
+				yaxis: {size: 15,showgrid: false, showticklabels: true, zeroline: false, fixedrange: true, autotick: false, type: 'category'},
+				hovermode:false,
+				hoverlabel:
+				{
+					// font: {size: 12},
+				}
+			};
+
+		var xValues = conf_labels[0];
+		var yValues = conf_labels[1];
+		var zValues = conf_values;
+		var conf_mean = {{confusion_mean | safe}};
+
+		for ( var i = 0; i < yValues.length; i++ ) {
+		  for ( var j = 0; j < xValues.length; j++ ) {
+		    var currentValue = zValues[i][j];
+		    if (currentValue > conf_mean) {
+		      var textColor = 'white';
+		    }else{
+		      var textColor = 'black';
+		    }
+		    var result = {
+		      xref: 'x1',
+		      yref: 'y1',
+		      x: xValues[j],
+		      y: yValues[i],
+		      text: zValues[i][j],
+		      font: {
+		        size: 15,
+		        color: textColor
+		      },
+		      showarrow: false
+		    };
+		    layout.annotations.push(result);
+		  }
+		}
+
+		Plotly.newPlot('conf_plot', data, layout);
+
+		// confusion matrix 설명
+		conf_text = document.getElementById('conf_text')
+		conf_text.innerHTML = '<b>Confusion Matrix</b>란 Training 을 통한 Prediction 성능을 측정하기 위해 예측 value와 실제 value를 비교하기 위한 표입니다.'
+
+		// Feature Importance
+		var feature_name = {{feature_name | safe}};
+		var feature_imp = {{feature_imp | safe}};
+		var trace0 = {
+			x: feature_imp,
+			y: feature_name,
+			orientation: 'h',
+			type: 'bar',
+			// marker: {
+			// 	color: 'rgba(0, 138, 188, 0.7)',
+			// 	line: {
+			// 		color: '#008abc',
+			// 		width: 2
+			// 	}
+			// },
+			// hoverinfo: 'x+y',
+			// hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+			// 				'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+			};
+
+		var data = [trace0],
+			layout = {
+				width: 600,
+				height: 600,
+				margin: {r: 50, b: 50, t: 50 },
+				yaxis: {automargin: true},
+				// showlegend: false,
+				bargap :0.2,
+				// hovermode: 'closest',
+				hoverlabel: {
+					bgcolor: 'white',
+					bordercolor: '#D3D3D3',
+					font: {color: 'black'}
+				},
+					// xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false, type: 'category'}
+			};
+
+		Plotly.newPlot('FI_plot', data, layout);
+
+		// Feature Importance 설명
+		conf_text = document.getElementById('FI_text');
+		conf_text.innerHTML = '위의 그래프는 <b>Top-20 Feature Imortance</b>를 나타낸 그래프입니다. ';
+
+		// Distribution Plot
+
+		var distplot_ls = {{distplot_ls | safe}};
+		var dist_text = {{dist_text | safe}};
+		for (var i=feature_name.length - 1; i>=0; i--) {
+			var iter_distplot = distplot_ls[i];
+			var iter_type = iter_distplot[0];
+			var iter_feature = feature_name[i];
+			var iter_text = dist_text[i];
+
+			// top-text
+			document.getElementById("top5-"+i.toString()).innerHTML = iter_feature;
+
+			if (iter_type === 'Numeric') {
+
+				// plot
+				var label_num = iter_distplot[1];
+				var final_labels = iter_distplot[2];
+				var data_ls = iter_distplot[3];
+				var Target = "{{Target | safe}}";
+
+				var data = [];
+				for (var j=0; j<label_num; j++){
+					eval("var trace"+j+"= {x:data_ls["+j+"][0], y:data_ls["+j+"][1], name:"
+						+"final_labels["+j+"]"+
+						",hoverinfo:'x+y',mode:'lines'}; data.push(trace"+j+");")
+				};
+
+				var layout = {
+					width: 600,
+					margin: { l: 50, r: 50, b: 50, t: 50 },
+					xaxis: {showgrid: true, zeroline: true},
+					yaxis: {showgrid: true, showticklabels: true,zeroline: true},
+					xaxis: {title: '<b>'+iter_feature+'</b>', size: 15},
+					hovermode: 'closest',
+					hoverlabel:{
+						font: {size: 14, color:'white'}, bordercolor: 'white'
+					}
+				};
+
+				Plotly.newPlot("plot5-"+i.toString(), data, layout);
+
+				// text
+				document.getElementById("text5-"+i.toString()).innerHTML = iter_text
+			}
+
+			else if (iter_type === 'Categorical') {
+
+				// plot
+				var X_ls = iter_distplot[1];
+				var Y_ls = iter_distplot[2];
+				var label_num1 = iter_distplot[3];
+				var data_ls = iter_distplot[4];
+				var mode = iter_distplot[5];
+				var Target = "{{Target | safe}}";
+
+				data = [];
+				for (j=0; j<label_num1; j++) {
+					eval("var trace"+j+"= {x:X_ls, y:data_ls["+j+"],"
+						+"name:Y_ls["+j+"], type:'bar',"
+						+"}; data.push(trace"+j+")");
+				};
+
+				var layout = {
+					barmode: mode,
+					width: 600,
+					margin: { l: 50, r: 50, b: 50, t: 50 },
+					bargap :0.3,
+					// bargroupgap: 0.2,
+					xaxis: {title: '<b>'+iter_feature+'</b>', size: 15, autotick: false, type: 'category'},
+					yaxis: {title: '<b>'+Target+'</b>', size: 15},
+					// hovermode: 'closest',
+					hoverinfo: 'y',
+					hovertemplate:"<b style='text-align: left'>%{y}</b><extra></extra>",
+					hoverlabel: {
+							// font: {size: 13, color:'white'}, bordercolor: 'white'
+						},
+					hovermode: 'x unified'
+					};
+
+				Plotly.newPlot("plot5-"+i.toString(), data, layout);
+
+				// text
+				document.getElementById("text5-"+i.toString()).innerHTML = iter_text
+
+			}
+
+			else if (iter_type === 'Impossible') {
+				document.getElementById("plot5-"+i.toString()).innerHTML = iter_text
+			}
+
+		}
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$('.slider-div').slick({
+			  dots: true,
+			  infinite: true,
+			  speed: 300,
+			  slidesToShow: 1,
+			  adaptiveHeight: true
+			});
+		});
+	</script>
+</html>
