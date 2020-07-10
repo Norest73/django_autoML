@@ -376,7 +376,7 @@ def Report(request):
 
 
     #  Modeling & 결과 적재 ---------------------------------------------------------------------------------------
-    name, mean_acc, mean_f1, confusion_final, confusion_labels, desc_name, desc_imp = XGB_n_Target(df_refined, json_info, target='Survived')
+    name, mean_acc, mean_f1, confusion_final, confusion_labels, desc_name, desc_imp = XGB_n_Target(df_refined, json_info)
 
     # 2) Result 적재
     model_info = {}

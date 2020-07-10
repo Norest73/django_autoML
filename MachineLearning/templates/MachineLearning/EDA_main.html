@@ -324,6 +324,11 @@
 				font-weight: 600!important;
 			}
 
+			.controller-hover {
+				border: 3px solid black!important;
+				color: black!important;
+			}
+
 			.plot-main-background {
 				margin: 0 0;
 				width:calc(100vw - 490px);
@@ -603,6 +608,15 @@
 			        $('.fa-arrow-alt-circle-right').removeClass('fa-arrow-alt-circle-right')
 			    }
 			});
+
+			$('.Topbar-next, .Topbar-back, .Topbar-forward').mouseover(function(){
+				$(this).addClass('controller-hover');
+			});
+
+			$('.Topbar-next, .Topbar-back, .Topbar-forward').mouseout(function(){
+				$(this).removeClass('controller-hover');
+			});
+
 		</script>
 		<script>
 			function goBack(){
