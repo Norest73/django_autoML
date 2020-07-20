@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title> AutoML </title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+		
+		<style>
+			body {
+				margin: 0 0;
+			}
+
+			body {
+				width: 100%;
+				height: calc(100vh - 65px);
+				/*min-height: calc(100vh - 65px);*/
+				margin: 0 0;
+				/*background-color: rgba(245,245,245,0.1);*/
+			}
+
+			/*스크롤바 설정*/
+			body::-webkit-scrollbar {
+			  width: 6px;
+			}
+			body::-webkit-scrollbar-track {
+			  background-color: transparent;
+			}
+			body::-webkit-scrollbar-thumb {
+			  border-radius: 3px;
+			  background-color: gray;
+			}
+			body::-webkit-scrollbar-button {
+			  width: 0;
+			  height: 0;
+			}
+
+			.plots-all {
+				width: 650px;
+				clear: both;
+				margin: 0 auto;
+			}
+
+			/*.plots-text {
+				width: 100%;
+				height: 70%;
+				float: left;
+				margin: 0 auto;
+			}*/
+
+			.plots-plot {
+				/*float: right;*/
+				width: 100%;
+				height: 65%;
+				/*float: right;*/
+				margin: 0 auto;
+				/*display: table;*/
+			}
+
+			.top-text {
+				width: 100%;
+				height: 10%;
+				font-weight: 600;
+				font-size: 22px;
+				vertical-align: middle;
+				margin: 15px -0 -15px 0;
+				/*line-height: 70px;*/
+				/*margin: 0 -15px 0 15px;*/
+				/*vertical-align: middle;*/
+				/*margin: 30px 15px -30px 15px;*/
+				/*display: table-cell;
+				vertical-align: middle;*/
+			}
+
+			.bottom-text {
+				width: 95%;
+				height: 25%;
+				/*margin: 0 -15px 0 15px;*/
+				font-size: 13px;
+				margin: 25px -10px -25px 10px;
+				color: rgb(60,60,60);
+				line-height: 1.7;
+			}
+
+			.plot-text {
+				/*float: right;*/
+				width: 100%;
+				height: 90%;
+				/*float: right;*/
+				margin: 0 auto;
+				/*display: table;*/
+			}
+
+			.plots-plot5 {
+				width: 100%;
+				height: 350px;
+				margin: 0 auto;
+			}
+
+			.bottom-text5 {
+				width: 95%;
+				height: 120px;
+				font-size: 13px;
+				margin: 20px -10px -20px 10px;
+				color: rgb(60,60,60);
+				line-height: 1.7;
+			}
+
+			.top-text5 {
+				width: 100%;
+				height: 50px;
+				font-size: 20px;
+				font-weight: 600;
+				/*line-height: 1.7;*/
+				text-align: center;	
+				margin: 20px 0 -20px 0;
+			}
+
+			.blanks-all {
+				width: 100%;
+				height: 60px;
+				clear: both;
+			}
+
+			.blanks-only {
+				width: 100%;
+				height: 85px;
+				clear: both;
+				line-height: 50px;
+				font-weight: 700;
+				font-size: 30px;
+				margin: 15px 0 -15px 0;
+			}
+
+			.blanks-blank {
+				height: 30px;
+				width: 100%;
+			}
+
+			table.modeling_result{
+				width: 100%;
+				height: 190px;
+				margin: 30px 0 -40px 0;
+				border-collapse: collapse;
+				border-top: 0.5px solid #f0f0f0;
+				table-layout: fixed;
+			}
+
+			.score_text {
+				padding-top: 5px;
+				padding-bottom: -5px;
+				height: 20px;
+				text-align: center;
+				font-weight: 600;
+				font-size: 18px;
+			}
+
+			.score_plot {
+				padding-left: 22px;
+				border-bottom: 1px solid #f0f0f0;
+			}
+
+			table.summary-table {
+				width: 100%;
+				margin-top: 30px;
+				border-collapse: collapse;
+				border-top: 0.5px solid #f0f0f0;
+			}
+
+			tr.summary-top td{
+				color: rgb(50, 50, 50);
+				padding: 0, 5px;
+				height: 35px;
+				font-weight: 600;
+				font-size: 16px;
+				border-bottom: 1px solid #f0f0f0;
+				text-align: left;
+				background-color: rgb(242, 245, 245);
+			}
+
+			tr.summary-bottom td{
+				color: rgb(50, 50, 50);
+				height: 30px;
+				padding: 0, 5px;
+				text-align: left;
+				font-size: 13px;
+				border-bottom: 1px solid #f0f0f0;
+			}
+
+			/*table.explain-table td {
+				border: 1px solid #f0f0f0;
+			}*/
+
+		</style>
+	</head>
+	<body id='plot-body'> 
+		{% csrf_token %}
+		<div class="blanks-only">&nbsp; Machine Learning Report (</div>
+		<div class="plots-all" style="height:300px">
+			<div class="top-text">1. Model Performance </div>
+			<table class="modeling_result">
+				<tr>
+					<td class='score_text'>Accuracy</td>
+					<td class='score_text'>Precision</td>
+					<td class='score_text'>Recall</td>
+				</tr>
+				<tr>
+					<td class='score_plot' id='acc_plot'></td>
+					<td class='score_plot' id='pre_plot'></td>
+					<td class='score_plot' id='rec_plot'></td>
+				</tr>
+			</table>
+			<div class="bottom-text" style="margin-top : 55px;"> 
+				위 그래프는 머신러닝 알고리즘을 통해 <b>학습된 모델 성능 지표</b>입니다. 모델 성능은 데이터 품질에 따라 크게 좌우되며 불필요 데이터 삭제, 정합성 향상, 결측치 처리를 통해 향상시킬 수 있습니다. <br>
+				<b>Accuracy</b>는 데이터를 정확하게 분류해낼 확률을 나타내는 가장 간단하고 직관적인 성능지표입니다.<br> 
+				<b>Precision</b>은 양성으로 분류한 데이터가 정확하게 일치할 확률을 나타내는 성능지표입니다. 불량 데이터의 세밀한 검출이 중요한 상황에서는 이 지표를 주의깊게 확인해야 합니다.<br><b>Recall</b>은 실제 양성 데이터를 정확하게 양성으로 분류해낼 확률을 나타내는 성능지표입니다. 가성 불량률이 중요한 상황에서는 이 지표를 주의깊게 확인해야 합니다.
+			</div>
+		</div>
+		<div class='blanks-blank' style="height: 140px;"></div>
+
+		<div class="plots-all" style="height: auto;">
+			<div class="top-text">2. Data Summary</div>
+			<table class="summary-table">
+				<tr class="summary-top">
+					<td style="width:">Feature</td>
+					<td>Type</td>
+					<td style="text-align: right;">Missing</td>
+					<td style="text-align: right;">Unique</td>
+					<td style="text-align: right;">Mode</td>
+					<td style="text-align: center;">Min</td>
+					<td style="text-align: center;">Mean</td>
+					<td style="text-align: center;">Max</td>
+					<td style="text-align: center;">Std</td>
+				</tr>
+				{% for summary in summary_zip %}
+					<tr class="summary-bottom">
+						<td>{{summary.0}}</td>
+						<td>{{summary.1}}</td>
+						<td style="text-align: right;">{{summary.2}}</td>
+						<td style="text-align: right;">{{summary.3}}</td>
+						<td style="text-align: right;">{{summary.4}}</td>
+						<td style="text-align: right;">{{summary.5}}</td>
+						<td style="text-align: right;">{{summary.6}}</td>
+						<td style="text-align: right;">{{summary.7}}</td>
+						<td style="text-align: right;">{{summary.8}}</td>
+					</tr>
+				{% endfor %}
+			</table>
+			<div class="bottom-text" style="margin: 20px 0px 0px 0px; width: 100%;"> 
+				위 표는 <b>머신러닝 학습에 사용된 데이터 정보</b>를 요약하여 나타냅니다. 표를 통해 요약된 데이터 정보를 확인해보세요. 특히 데이터 유형과 결측치는 데이터 분석 결과에 큰 영향을 미치므로 주의깊게 확인해야 합니다. <br>
+				&nbsp;- <b> Type : </b> Feature 값의 데이터 유형을 나타내며 크게 범주형, 숫자형, 시간형 변수로 구분됩니다. <br>
+				&nbsp;- <b> Missing : </b> 데이터 결측된 정도를 의미하며 0일 경우 데이터가 전부 입력되어 있다는 것을 의미합니다. <br>
+				&nbsp;- <b> Unique : </b> 데이터 값이 유일한 정도를 나타내며 100일 경우 데이터가 전부 다른 값이라는 것을 의미합니다. <br>
+				&nbsp;- <b> Mode : </b> 데이터의 최빈값을 나타내며 데이터 값중에 가장 많이 사용된 값을 의미합니다. <br>
+				&nbsp;- <b> Min : </b> 데이터의 최소값을 나타냅니다. 오직 숫자형 변수일 때만 값이 입력됩니다. <br>
+				&nbsp;- <b> Mean : </b> 데이터의 평균값을 의미합니다. 오직 숫자형 변수일 때만 값이 입력됩니다. <br>
+				&nbsp;- <b> Max : </b> 데이터의 최대값을 나타냅니다. 오직 숫자형 변수일 때만 값이 입력됩니다.<br>
+				&nbsp;- <b> Std : </b> 데이터의 표준편차를 나타냅니다. 오직 숫자형 변수일 때만 값이 입력됩니다.<br><br>
+			</div>
+		</div>
+		<div class='blanks-blank' style="height:15px"></div>
+
+		<div class="plots-all" sty>
+			<div class="top-text" >3. Feature Importance</div>
+			<div class="plots-plot" id="FI_plot" style="height: 600px; margin: 15px 0 0 0"></div>
+			<div class="bottom-text" id="FI_text" style="margin:0 0 0 0">
+				위 그래프는 머신러닝 알고리즘을 통해 산출된 <b>변수 중요도(Feature Imporance)</b>를 나타냅니다.<br>
+				변수 중요도는 각 변수가 목적변수 분류에 기여한 영향도를 수치화하여 나타낸 지표입니다. <b>수치가 높을수록 목적변수 분류에 큰 영향을 미치는 중요한 변수</b>라는 의미이며, 반대로 <b>수치가 낮을수록 목적변수 분류에 영향이 없는 불필요한 변수</b>라는 의미입니다.<br>
+			 	이 변수 중요도를 잘 활용하면 복잡한 머신러닝 알고리즘을 쉽게 해석할 수 있습니다. 중요도가 높은 변수들을 우선적으로 살펴보면서 목적변수와의 관계를 분석해보세요. <br> <b>Feature Importance</b> 그래프는 중요도가 높은 변수 순서대로 최대 20개까지 나타내며, 아래 <b>Distribution Plots</b>를 통해 해당 변수에 대한 목적변수와의 관계까지 확인할 수 있습니다.
+			</div>
+		</div>
+		<div class='blanks-blank' style="height: 30px"></div>
+
+		<div class="plots-all" id='for-plot5' style='height: 600px;'>
+			<div class="top-text" style='height: 80px;'>4. Distribution Plots</div>
+			<div class='slider-div' id='slider-div'>
+				<script type="text/javascript">
+					var feature_name = {{feature_name | safe}};
+					var distplot_ls = {{distplot_ls | safe}};
+					for (var i=feature_name.length -1 ; i>=0; i--) {
+						document.write("<div class='plot-text' id='"+"plot-text-"+i.toString()+"' style='height: 520px;'><div class='top-text5' id='top5-"+i.toString()+"'></div><div class='plots-plot5' id='"+
+							"plot5-"+i.toString()+"'></div><div class='bottom-text5' id='"+"text5-"+i.toString()+"'></div></div>");
+					};
+				</script>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		// acc_plot & f1_plot
+		var model_name = '{{model_name | safe}}';
+		$('.blanks-only').append(model_name + ')')
+
+		var mean_acc = {{mean_acc | safe}};
+		var trace0 = {
+			values: mean_acc,
+			labels: [mean_acc[0], null],
+			text: [null, null],
+			textinfo:'text',
+			hole: .80,
+			type: 'pie',
+			marker: {
+				colors: ['rgb(31, 119, 180)','#f1f2f3']
+			}
+		};
+		var data = [trace0],
+			layout = {
+				width: 170,
+				showlegend: false,
+				margin: { l: 20, r: 20, b: 20, t: 20 },
+				hovermode: false,
+			annotations: [
+				{
+					showarrow: false,
+					text: '<b>'+mean_acc[0]+'%</b>',
+					font:
+					{
+						color: 'black',
+						size: 14
+					}
+				}
+			]
+			};
+
+		Plotly.newPlot('acc_plot', data, layout, {displayModeBar: false});
+
+		var mean_pre = {{mean_pre | safe}};
+		var trace0 = {
+			values: mean_pre,
+			labels: [mean_pre[0], null],
+			text: [null, null],
+			textinfo:'text',
+			hole: .80,
+			type: 'pie',
+			marker: {
+				colors: ['rgb(255, 127, 14)','#f1f2f3']
+			}
+		};
+		var data = [trace0],
+			layout = {
+				width: 170,
+				showlegend: false,
+				margin: { l: 20, r: 20, b: 20, t: 20 },
+				hovermode: false,
+			annotations: [
+				{
+					showarrow: false,
+					text: '<b>'+mean_pre[0]+'%</b>',
+					font:
+					{	
+						color: 'black',
+						size: 14
+					}
+				}
+			]
+			};
+
+		Plotly.newPlot('pre_plot', data, layout, {displayModeBar: false});
+
+		var mean_rec = {{mean_rec | safe}};
+		var trace0 = {
+			values: mean_rec,
+			labels: [mean_rec[0], null],
+			text: [null, null],
+			textinfo:'text',
+			hole: .80,
+			type: 'pie',
+			marker: {
+				colors: ['rgb(44, 160, 44)','#f1f2f3']
+			}
+		};
+		var data = [trace0],
+			layout = {
+				width: 170,
+				showlegend: false,
+				margin: { l: 20, r: 20, b: 20, t: 20 },
+				hovermode: false,
+			annotations: [
+				{
+					showarrow: false,
+					text: '<b>'+mean_rec[0]+'%</b>',
+					font:
+					{	
+						color: 'black',
+						size: 14
+					}
+				}
+			]
+			};
+
+		Plotly.newPlot('rec_plot', data, layout, {displayModeBar: false});
+
+		// Feature Importance
+		var feature_name = {{feature_name | safe}};
+		var feature_imp = {{feature_imp | safe}};
+		var trace0 = {
+			x: feature_imp,
+			y: feature_name,
+			orientation: 'h',
+			type: 'bar',
+			// marker: {
+			// 	color: 'rgba(0, 138, 188, 0.7)',
+			// 	line: {
+			// 		color: '#008abc',
+			// 		width: 2
+			// 	}
+			// },
+			// hoverinfo: 'x+y',
+			// hovertemplate: '<b style="text-align: left"> Class:  %{x}  </b>'+
+			// 				'<br> <span style="color: #a9a9a9; text-align: left">Count:</span>  <b>%{y}</b> <extra></extra>'
+			};
+
+		var data = [trace0],
+			layout = {
+				height: 600,
+				margin: {r: 50, b: 50, t: 50 },
+				yaxis: {automargin: true},
+				// showlegend: false,
+				bargap :0.4,
+				// hovermode: 'closest',
+				hoverlabel: {
+					bgcolor: 'white',
+					bordercolor: '#D3D3D3',
+					font: {color: 'black'}
+				},
+					// xaxis: {title: '<b>'+col1+'</b>', size: 15, autotick: false, type: 'category'}
+			};
+
+		Plotly.newPlot('FI_plot', data, layout);
+
+		// Distribution Plot
+
+		var distplot_ls = {{distplot_ls | safe}};
+		var dist_text = {{dist_text | safe}};
+		for (var i=feature_name.length - 1; i>=0; i--) {
+			var iter_distplot = distplot_ls[i];
+			var iter_type = iter_distplot[0];
+			var iter_feature = feature_name[i];
+			var iter_text = dist_text[i];
+
+			// top-text
+			document.getElementById("top5-"+i.toString()).innerHTML = iter_feature;
+
+			if (iter_type === 'Numeric') {
+
+				// plot
+				var label_num = iter_distplot[1];
+				var final_labels = iter_distplot[2];
+				var data_ls = iter_distplot[3];
+				var Target = "{{Target | safe}}";
+
+				var data = [];
+				for (var j=0; j<label_num; j++){
+					eval("var trace"+j+"= {x:data_ls["+j+"][0], y:data_ls["+j+"][1], name:"
+						+"final_labels["+j+"]"+
+						",hoverinfo:'x+y',mode:'lines'}; data.push(trace"+j+");")
+				};
+
+				var layout = {
+					width: 600,
+					margin: { l: 50, r: 50, b: 50, t: 50 },
+					xaxis: {showgrid: true, zeroline: true},
+					yaxis: {showgrid: true, showticklabels: true,zeroline: true},
+					xaxis: {title: '<b>'+iter_feature+'</b>', size: 15},
+					hovermode: 'closest',
+					hoverlabel:{
+						font: {size: 14, color:'white'}, bordercolor: 'white'
+					}
+				};
+
+				Plotly.newPlot("plot5-"+i.toString(), data, layout);
+
+				// text
+				document.getElementById("text5-"+i.toString()).innerHTML = iter_text
+			}
+
+			else if (iter_type === 'Categorical') {
+
+				// plot
+				var X_ls = iter_distplot[1];
+				var Y_ls = iter_distplot[2];
+				var label_num1 = iter_distplot[3];
+				var data_ls = iter_distplot[4];
+				var mode = iter_distplot[5];
+				var Target = "{{Target | safe}}";
+
+				data = [];
+				for (j=0; j<label_num1; j++) {
+					eval("var trace"+j+"= {x:X_ls, y:data_ls["+j+"],"
+						+"name:Y_ls["+j+"], type:'bar',"
+						+"}; data.push(trace"+j+")");
+				};
+
+				var layout = {
+					barmode: mode,
+					width: 600,
+					margin: { l: 50, r: 50, b: 50, t: 50 },
+					bargap :0.3,
+					// bargroupgap: 0.2,
+					xaxis: {title: '<b>'+iter_feature+'</b>', size: 15, autotick: false, type: 'category'},
+					yaxis: {title: '<b>'+Target+'</b>', size: 15},
+					// hovermode: 'closest',
+					hoverinfo: 'y',
+					hovertemplate:"<b style='text-align: left'>%{y}</b><extra></extra>",
+					hoverlabel: {
+							// font: {size: 13, color:'white'}, bordercolor: 'white'
+						},
+					hovermode: 'x unified'
+					};
+
+				Plotly.newPlot("plot5-"+i.toString(), data, layout);
+
+				// text
+				document.getElementById("text5-"+i.toString()).innerHTML = iter_text
+
+			}
+
+			else if (iter_type === 'Impossible') {
+				document.getElementById("plot5-"+i.toString()).innerHTML = iter_text
+			}
+
+		}
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$('.slider-div').slick({
+			  dots: true,
+			  infinite: true,
+			  speed: 300,
+			  slidesToShow: 1,
+			  adaptiveHeight: true
+			});
+		});
+	</script>
+</html>

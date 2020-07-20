@@ -6,6 +6,7 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
 		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
 		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+		
 		<style>
 			body {
 				margin: 0 0;
@@ -36,8 +37,7 @@
 			}
 
 			.plots-all {
-				width: 600px;
-				height: 500px;
+				width: 650px;
 				clear: both;
 				margin: 0 auto;
 			}
@@ -140,43 +140,51 @@
 
 			table.modeling_result{
 				width: 100%;
-				height: 220px;
-				margin: 40px 0 -40px 0;
+				height: 190px;
+				margin: 30px 0 -40px 0;
 				border-collapse: collapse;
 				border-top: 0.5px solid #f0f0f0;
 				table-layout: fixed;
 			}
 
 			.score_text {
-				height: 40px;
+				padding-top: 5px;
+				padding-bottom: -5px;
+				height: 20px;
 				text-align: center;
-				/*border-bottom: 1px solid #3c3c3c;*/
 				font-weight: 600;
-				font-size: 20px;
+				font-size: 18px;
 			}
 
 			.score_plot {
+				padding-left: 22px;
 				border-bottom: 1px solid #f0f0f0;
 			}
 
-			table.explain-table {
+			table.summary-table {
 				width: 100%;
-				margin: 50px 0 -50px 0;
+				margin-top: 30px;
 				border-collapse: collapse;
 				border-top: 0.5px solid #f0f0f0;
 			}
 
-			tr.explain-top {
-				height: 30px;
+			tr.summary-top td{
+				color: rgb(50, 50, 50);
+				padding: 0, 5px;
+				height: 35px;
 				font-weight: 600;
-				font-size: 15px;
+				font-size: 16px;
 				border-bottom: 1px solid #f0f0f0;
-				text-align: center;
-				background-color: #f0f0f0
+				text-align: left;
+				background-color: rgb(242, 245, 245);
 			}
 
-			tr.explain-bottom{
-				font-size: 12px;
+			tr.summary-bottom td{
+				color: rgb(50, 50, 50);
+				height: 30px;
+				padding: 0, 5px;
+				text-align: left;
+				font-size: 13px;
 				border-bottom: 1px solid #f0f0f0;
 			}
 
@@ -188,61 +196,84 @@
 	</head>
 	<body id='plot-body'> 
 		{% csrf_token %}
-		<div class="blanks-only">&nbsp; Report</div>
+		<div class="blanks-only">&nbsp; Machine Learning Report (</div>
 		<div class="plots-all" style="height:300px">
-			<div class="top-text">1. Modeling Result</div>
+			<div class="top-text">1. Model Performance </div>
 			<table class="modeling_result">
 				<tr>
 					<td class='score_text'>Accuracy</td>
-					<td class='score_text'>F1 Score</td>
+					<td class='score_text'>Precision</td>
+					<td class='score_text'>Recall</td>
 				</tr>
 				<tr>
 					<td class='score_plot' id='acc_plot'></td>
-					<td class='score_plot' id='f1_plot'></td>
+					<td class='score_plot' id='pre_plot'></td>
+					<td class='score_plot' id='rec_plot'></td>
 				</tr>
 			</table>
+			<div class="bottom-text" style="margin-top : 55px;"> 
+				위 그래프는 머신러닝 알고리즘을 통해 <b>학습된 모델 성능 지표</b>입니다. 모델 성능은 데이터 품질에 따라 크게 좌우되며 불필요 데이터 삭제, 정합성 향상, 결측치 처리를 통해 향상시킬 수 있습니다. <br>
+				<b>Accuracy</b>는 데이터를 정확하게 분류해낼 확률을 나타내는 가장 간단하고 직관적인 성능지표입니다.<br> 
+				<b>Precision</b>은 양성으로 분류한 데이터가 정확하게 일치할 확률을 나타내는 성능지표입니다. 불량 데이터의 세밀한 검출이 중요한 상황에서는 이 지표를 주의깊게 확인해야 합니다.<br><b>Recall</b>은 실제 양성 데이터를 정확하게 양성으로 분류해낼 확률을 나타내는 성능지표입니다. 가성 불량률이 중요한 상황에서는 이 지표를 주의깊게 확인해야 합니다.
+			</div>
 		</div>
-		<div class='blanks-blank'></div>
-
-		<div class="plots-all">
-			<div class="top-text">2. Confusion Matrix</div>
-			<div class="plots-plot" id="conf_plot"></div>
-			<div class="bottom-text" id="conf_text"></div>
-		</div>
-		<div class='blanks-blank'></div>
+		<div class='blanks-blank' style="height: 140px;"></div>
 
 		<div class="plots-all" style="height: auto;">
-			<div class="top-text">3. Feature Explanation</div>
-			<table class="explain-table">
-				<tr class="explain-top">
-					<td>Feature</td>
+			<div class="top-text">2. Data Summary</div>
+			<table class="summary-table">
+				<tr class="summary-top">
+					<td style="width:">Feature</td>
 					<td>Type</td>
-					<td>Unique</td>
-					<td>Missing</td>
-					<td>Description</td>
+					<td style="text-align: right;">Missing</td>
+					<td style="text-align: right;">Unique</td>
+					<td style="text-align: right;">Mode</td>
+					<td style="text-align: center;">Min</td>
+					<td style="text-align: center;">Mean</td>
+					<td style="text-align: center;">Max</td>
+					<td style="text-align: center;">Std</td>
 				</tr>
-				{% for explain in explain_zip %}
-					<tr class="explain-bottom">
-						<td>{{explain.0}}</td>
-						<td>{{explain.1}}</td>
-						<td>{{explain.2}}</td>
-						<td>{{explain.3}}</td>
-						<td>{{explain.4}}</td>
+				{% for summary in summary_zip %}
+					<tr class="summary-bottom">
+						<td>{{summary.0}}</td>
+						<td>{{summary.1}}</td>
+						<td style="text-align: right;">{{summary.2}}</td>
+						<td style="text-align: right;">{{summary.3}}</td>
+						<td style="text-align: right;">{{summary.4}}</td>
+						<td style="text-align: right;">{{summary.5}}</td>
+						<td style="text-align: right;">{{summary.6}}</td>
+						<td style="text-align: right;">{{summary.7}}</td>
+						<td style="text-align: right;">{{summary.8}}</td>
 					</tr>
 				{% endfor %}
 			</table>
+			<div class="bottom-text" style="margin: 20px 0px 0px 0px; width: 100%;"> 
+				위 표는 <b>머신러닝 학습에 사용된 데이터 정보</b>를 요약하여 나타냅니다. 표를 통해 요약된 데이터 정보를 확인해보세요. 특히 데이터 유형과 결측치는 데이터 분석 결과에 큰 영향을 미치므로 주의깊게 확인해야 합니다. <br>
+				&nbsp;- <b> Type : </b> Feature 값의 데이터 유형을 나타내며 크게 범주형, 숫자형, 시간형 변수로 구분됩니다. <br>
+				&nbsp;- <b> Missing : </b> 데이터 결측된 정도를 의미하며 0일 경우 데이터가 전부 입력되어 있다는 것을 의미합니다. <br>
+				&nbsp;- <b> Unique : </b> 데이터 값이 유일한 정도를 나타내며 100일 경우 데이터가 전부 다른 값이라는 것을 의미합니다. <br>
+				&nbsp;- <b> Mode : </b> 데이터의 최빈값을 나타내며 데이터 값중에 가장 많이 사용된 값을 의미합니다. <br>
+				&nbsp;- <b> Min : </b> 데이터의 최소값을 나타냅니다. 오직 숫자형 변수일 때만 값이 입력됩니다. <br>
+				&nbsp;- <b> Mean : </b> 데이터의 평균값을 의미합니다. 오직 숫자형 변수일 때만 값이 입력됩니다. <br>
+				&nbsp;- <b> Max : </b> 데이터의 최대값을 나타냅니다. 오직 숫자형 변수일 때만 값이 입력됩니다.<br>
+				&nbsp;- <b> Std : </b> 데이터의 표준편차를 나타냅니다. 오직 숫자형 변수일 때만 값이 입력됩니다.<br><br>
+			</div>
 		</div>
-		<div class='blanks-blank' style="height:100px"></div>
+		<div class='blanks-blank' style="height:15px"></div>
 
-		<div class="plots-all" style="height: 800px;">
-			<div class="top-text" >4. Feature Importance</div>
-			<div class="plots-plot" id="FI_plot" style="margin: -40px 0 40px 0"></div>
-			<div class="bottom-text" id="FI_text" style="margin: 80px 0 0 0"></div>
+		<div class="plots-all" sty>
+			<div class="top-text" >3. Feature Importance</div>
+			<div class="plots-plot" id="FI_plot" style="height: 600px; margin: 15px 0 0 0"></div>
+			<div class="bottom-text" id="FI_text" style="margin:0 0 0 0">
+				위 그래프는 머신러닝 알고리즘을 통해 산출된 <b>변수 중요도(Feature Imporance)</b>를 나타냅니다.<br>
+				변수 중요도는 각 변수가 목적변수 분류에 기여한 영향도를 수치화하여 나타낸 지표입니다. <b>수치가 높을수록 목적변수 분류에 큰 영향을 미치는 중요한 변수</b>라는 의미이며, 반대로 <b>수치가 낮을수록 목적변수 분류에 영향이 없는 불필요한 변수</b>라는 의미입니다.<br>
+			 	이 변수 중요도를 잘 활용하면 복잡한 머신러닝 알고리즘을 쉽게 해석할 수 있습니다. 중요도가 높은 변수들을 우선적으로 살펴보면서 목적변수와의 관계를 분석해보세요. <br> <b>Feature Importance</b> 그래프는 중요도가 높은 변수 순서대로 최대 20개까지 나타내며, 아래 <b>Distribution Plots</b>를 통해 해당 변수에 대한 목적변수와의 관계까지 확인할 수 있습니다.
+			</div>
 		</div>
-		<div class='blanks-blank'></div>
+		<div class='blanks-blank' style="height: 30px"></div>
 
 		<div class="plots-all" id='for-plot5' style='height: 600px;'>
-			<div class="top-text" style='height: 80px;'>5. Distribution Plots</div>
+			<div class="top-text" style='height: 80px;'>4. Distribution Plots</div>
 			<div class='slider-div' id='slider-div'>
 				<script type="text/javascript">
 					var feature_name = {{feature_name | safe}};
@@ -257,21 +288,24 @@
 	</body>
 	<script type="text/javascript">
 		// acc_plot & f1_plot
+		var model_name = '{{model_name | safe}}';
+		$('.blanks-only').append(model_name + ')')
+
 		var mean_acc = {{mean_acc | safe}};
 		var trace0 = {
 			values: mean_acc,
 			labels: [mean_acc[0], null],
 			text: [null, null],
 			textinfo:'text',
-			hole: .87,
+			hole: .80,
 			type: 'pie',
 			marker: {
-				colors: ['#1f77b4','#f1f2f3']
+				colors: ['rgb(31, 119, 180)','#f1f2f3']
 			}
 		};
 		var data = [trace0],
 			layout = {
-				// width: 200,
+				width: 170,
 				showlegend: false,
 				margin: { l: 20, r: 20, b: 20, t: 20 },
 				hovermode: false,
@@ -281,7 +315,8 @@
 					text: '<b>'+mean_acc[0]+'%</b>',
 					font:
 					{
-						size: 15
+						color: 'black',
+						size: 14
 					}
 				}
 			]
@@ -289,105 +324,71 @@
 
 		Plotly.newPlot('acc_plot', data, layout, {displayModeBar: false});
 
-		var mean_f1 = {{mean_f1 | safe}};
+		var mean_pre = {{mean_pre | safe}};
 		var trace0 = {
-			values: mean_f1,
-			labels: [mean_f1[0], null],
+			values: mean_pre,
+			labels: [mean_pre[0], null],
 			text: [null, null],
 			textinfo:'text',
-			hole: .87,
+			hole: .80,
 			type: 'pie',
 			marker: {
-				colors: ['#1f77b4','#f1f2f3']
+				colors: ['rgb(255, 127, 14)','#f1f2f3']
 			}
 		};
 		var data = [trace0],
 			layout = {
-				// height: 200,
+				width: 170,
 				showlegend: false,
 				margin: { l: 20, r: 20, b: 20, t: 20 },
 				hovermode: false,
 			annotations: [
 				{
 					showarrow: false,
-					text: '<b>'+mean_f1[0]+'%</b>',
+					text: '<b>'+mean_pre[0]+'%</b>',
 					font:
-					{
-						size: 15
+					{	
+						color: 'black',
+						size: 14
 					}
 				}
 			]
 			};
 
-		Plotly.newPlot('f1_plot', data, layout, {displayModeBar: false});
+		Plotly.newPlot('pre_plot', data, layout, {displayModeBar: false});
 
-		// confusion matrix
-		var conf_values = {{confusion_matrix | safe}};
-		var conf_labels = {{confusion_labels_XY | safe}};
-
+		var mean_rec = {{mean_rec | safe}};
 		var trace0 = {
-			z: conf_values,
-			x: conf_labels[0],
-			y: conf_labels[1],
-			text: ['0','1','2','3'],
-			type: 'heatmap',
-			colorscale: 'YlGnBu',
-			reversescale: true,
-			xgap:1,
-			ygap:1,
-			hoverinfo: 'x+y+z'
+			values: mean_rec,
+			labels: [mean_rec[0], null],
+			text: [null, null],
+			textinfo:'text',
+			hole: .80,
+			type: 'pie',
+			marker: {
+				colors: ['rgb(44, 160, 44)','#f1f2f3']
+			}
 		};
 		var data = [trace0],
 			layout = {
-				// width: 500,
-				// height: 300,
-				margin: { l: 50, r: 50, b: 50, t: 50 },
-				annotations: [],
-				// xaxis: {title: '<b>'+col1+'</b>', size: 15},
-				// yaxis: {title: '<b>'+col2+'</b>', size: 15},
-				xaxis: {size: 15,showgrid: false, zeroline: false,fixedrange: true, autotick: false, type: 'category'},
-				yaxis: {size: 15,showgrid: false, showticklabels: true, zeroline: false, fixedrange: true, autotick: false, type: 'category'},
-				hovermode:false,
-				hoverlabel:
+				width: 170,
+				showlegend: false,
+				margin: { l: 20, r: 20, b: 20, t: 20 },
+				hovermode: false,
+			annotations: [
 				{
-					// font: {size: 12},
+					showarrow: false,
+					text: '<b>'+mean_rec[0]+'%</b>',
+					font:
+					{	
+						color: 'black',
+						size: 14
+					}
 				}
+			]
 			};
 
-		var xValues = conf_labels[0];
-		var yValues = conf_labels[1];
-		var zValues = conf_values;
-		var conf_mean = {{confusion_mean | safe}};
-
-		for ( var i = 0; i < yValues.length; i++ ) {
-		  for ( var j = 0; j < xValues.length; j++ ) {
-		    var currentValue = zValues[i][j];
-		    if (currentValue > conf_mean) {
-		      var textColor = 'white';
-		    }else{
-		      var textColor = 'black';
-		    }
-		    var result = {
-		      xref: 'x1',
-		      yref: 'y1',
-		      x: xValues[j],
-		      y: yValues[i],
-		      text: zValues[i][j],
-		      font: {
-		        size: 15,
-		        color: textColor
-		      },
-		      showarrow: false
-		    };
-		    layout.annotations.push(result);
-		  }
-		}
-
-		Plotly.newPlot('conf_plot', data, layout);
-
-		// confusion matrix 설명
-		conf_text = document.getElementById('conf_text')
-		conf_text.innerHTML = '<b>Confusion Matrix</b>란 Training 을 통한 Prediction 성능을 측정하기 위해 예측 value와 실제 value를 비교하기 위한 표입니다.'
+		Plotly.newPlot('rec_plot', data, layout, {displayModeBar: false});
 
 		// Feature Importance
 		var feature_name = {{feature_name | safe}};
@@ -411,12 +412,11 @@
 
 		var data = [trace0],
 			layout = {
-				width: 600,
 				height: 600,
 				margin: {r: 50, b: 50, t: 50 },
 				yaxis: {automargin: true},
 				// showlegend: false,
-				bargap :0.2,
+				bargap :0.4,
 				// hovermode: 'closest',
 				hoverlabel: {
 					bgcolor: 'white',
@@ -427,10 +427,6 @@
 			};
 
 		Plotly.newPlot('FI_plot', data, layout);
-
-		// Feature Importance 설명
-		conf_text = document.getElementById('FI_text');
-		conf_text.innerHTML = '위의 그래프는 <b>Top-20 Feature Imortance</b>를 나타낸 그래프입니다. ';
 
 		// Distribution Plot
 

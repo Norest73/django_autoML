@@ -5,7 +5,7 @@ import re
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 import random
@@ -30,13 +30,12 @@ def XGB_n_Target(df, json_info):
 
 	# Target Feature Encoding : 데이터 값을 숫자 형태로 변환
 	# Target Feature는 Categorical 변수라고 가정 (Classification 모델을 우선적으로 개발)
-	# Object 데이터 값을 Numeric으로 변형했던 경우 confusion label 리스트를 다시 cateogry(str)로 바꿔줌 
-
+	# Object 데이터 값을 Numeric으로 변형한 경우 confusion label 리스트를 다시 cateogry(str)로 바꿔줌 
 	if 'Numeric' in json_info[target]['possible_type']:	
 		confusion_labels = list(set(df[target]))  # set() : Sorted Unique Value in DF Series 
 
 	else:  # Object(str) 형태의 데이터 값이 포함되어 있는 경우 숫자 형태로 변환
-	
+
 		ori_col_unique = df[target].unique()  # LabelEncoder를 하지 않은 String Unique Value List
 		encoder = LabelEncoder()
 		encoder.fit(df[target])
@@ -50,19 +49,21 @@ def XGB_n_Target(df, json_info):
 		# encoder_order대로 original_label을 정렬
 		ori_ordered_labels = ori_col_unique[encoder_order].tolist()
 
-	df[target] = df[target].astype('int64')
+	df[target] = df[target].astype('int64')  # Target Feature가 int 변수일때만 모델링 가능
 
 	# Target 숫자형/범주형 변수 구분 (범주형 변수에는 Target Encoding 적용) (아래로 이동 예정)
 	category_cols = [i for i in json_info if 'object' == json_info[i]['changed_dtype'] and json_info[i]['selected_type'] != 'Time' and i != target]
 	numeric_cols = [i for i in json_info if i not in category_cols and json_info[i]['selected_type'] != 'Time' and i != target] 
 
-	df_X = df.drop(target,axis=1)
+	df_X = df.drop(target, axis=1)
 	df_Y = df[target]
 
 	data_skf = StratifiedKFold(n_splits=5, random_state=42)
 	encoding_skf = StratifiedKFold(n_splits=5, random_state=42)
 
 	acc_ls = []
+	pre_ls = []
+	rec_ls = []
 	f1_ls = []
 	confusion_ls = []
 	imp_ls = []
@@ -71,9 +72,11 @@ def XGB_n_Target(df, json_info):
 	# 이때 train 데이터의 경우 한번 더 cross validation을 통해 target encoding 시킴
 
 	for train_index, val_index in data_skf.split(df_X, df_Y):
-	    X_train, Y_train = df_X.iloc[train_index].reset_index(drop=True,inplace=False), df_Y[train_index].reset_index(drop=True,inplace=False)
-	    X_val, Y_val = df_X.iloc[val_index].reset_index(drop=True,inplace=False), df_Y[val_index].reset_index(drop=True,inplace=False)
-	    
+	    X_train = df_X.iloc[train_index].reset_index(drop=True,inplace=False)
+	    Y_train = df_Y[train_index].reset_index(drop=True,inplace=False)
+	    X_val = df_X.iloc[val_index].reset_index(drop=True,inplace=False)
+	    Y_val = df_Y[val_index].reset_index(drop=True,inplace=False)
+
 	    # new: target encoding시킬 X_train + Y_train 데이터
 	    # modeling train에 쓰일 데이터 생성
 	    new = df.iloc[train_index,:].reset_index(drop=True,inplace=False)
@@ -83,23 +86,14 @@ def XGB_n_Target(df, json_info):
 	    
 	    # cross validation을 통해 target_encoding된 훈련데이터를 만드는 과정
 	    for encoding_index, encoded_index in encoding_skf.split(X_train, Y_train):
-	        X_encoding = df.iloc[encoding_index,:]
-	        X_encoded = df.iloc[encoded_index,:]
+	        X_encoding = new.iloc[encoding_index,:]
+	        X_encoded = new.iloc[encoded_index,:]
 
 	        for col in category_cols:
-	            # 방법1) 일반 target encoding 
-	            object_mean = X_encoded[col].map(X_encoding.groupby(col)[target].mean())
+	            # 일반 target encoding 
+	            object_mean = X_encoded[col].map(X_encoding.groupby(col)[target].mean()) # col 값에 대한 
 	            X_encoded['{}_mean'.format(col)] = object_mean
 	            new.iloc[encoded_index] = X_encoded
-	            
-	            # 방법2) smoothing
-	#             global_mean = X_encoding[target].mean()
-	#             alpha = 2
-	            
-	#             n_size = X_encoded[col].map(X_encoding.groupby(col).size())
-	#             target_mean = X_encoded[col].map(X_encoding.groupby(col)[target].mean())
-	#             X_encoded[col] = (target_mean*n_size + global_mean*alpha) / (n_size + alpha)
-	#         new.iloc[encoded_index] = X_encoded
 
 	    global_mean = df[target].mean()
 	    for col in category_cols:
@@ -124,6 +118,12 @@ def XGB_n_Target(df, json_info):
 	    acc = accuracy_score(val_target, Y_predict)
 	    acc_ls.append(acc)
 
+	    pre = precision_score(val_target, Y_predict)
+	    pre_ls.append(pre)
+
+	    rec = recall_score(val_target, Y_predict)
+	    rec_ls.append(rec)
+
 	    f1 = f1_score(val_target, Y_predict)
 	    f1_ls.append(f1)
 
@@ -135,42 +135,39 @@ def XGB_n_Target(df, json_info):
 	    imp_ls.append(imp)
 
 	mean_acc = np.mean(acc_ls)
+	mean_pre = np.mean(pre_ls)
+	mean_rec = np.mean(rec_ls)
 	mean_f1 = np.mean(f1_ls)
 	mean_imp = (np.mean(imp_ls, axis=0))
-
-	# np.array 형식은 json으로 저장 불가능
-	# 펴서 list의 형식으로 저장
-	# 나중에 render할 때 사용하기 편하게 confusion_matrix의 아랫단부터 값 제공
+	
+	# F1 score가 가장 높은 값의 Confusion Matrix를 List 형태로 변환 (나중에 사용하기 편하게 아랫단부터 값 제공)
 	where = f1_ls.index(np.max(f1_ls))
 	confusion_final = confusion_ls[where]
 	confusion_final = confusion_final.tolist()[::-1]
 
+	# Target Feature Label Encoding 한 경우 원래 값으로 변경 
 	if 'Numeric' not in json_info[target]['possible_type']:
 		confusion_labels = ori_ordered_labels
 
-	# dataframe 형식은 json으로 저장 불가능
-	# importance와 name을 따로 저장 (descending 순서로 → asecending = False)
+	# Feature importance가 높은(descending) 순서대로 List 형태로 변환
 	imp_order = mean_imp.argsort()[::-1]
 	desc_imp = mean_imp[imp_order].tolist()
 	desc_name = np.array([col for col in model_train.columns])[imp_order].tolist()
 
-	name = 'XGB{}'.format(random.random()).replace('0.','')
+	name = 'XGB{}'.format(round(random.random(), 8)).replace('0.','')
 
-	return name, mean_acc, mean_f1, confusion_final, confusion_labels, desc_name, desc_imp
+	return name, mean_acc, mean_pre, mean_rec, mean_f1, confusion_final, confusion_labels, desc_name, desc_imp
 	    
-
-# render할 model 선택
-# top 변수를 통해 몇개의 모델까지 render 시킬지 결정
-# 0610: render할 모델의 선정 기준 필요 → 일단은 f1_score 기준으로 top 뽑는 형식으로
 def get_render_models(model_info, top=1):
+	''' F1 Score를 기준으로 Rendering Model 선별 '''
+
 	model_names = np.array([key for key in model_info.keys()])
 	f1_ls = np.array([model_info[key]['f1_score'] for key in model_info.keys()])
 	f1_order = f1_ls.argsort()[::-1]
 
 	f1_model_names = model_names[f1_order].tolist()
 	final_model_names = f1_model_names[:top]
-	model_nums = ['Model({})'.format(i) for i in range(1,top+1)]
+	model_nums = ['Model {}'.format(i) for i in range(1,top+1)]
 	model_zip = zip(final_model_names, model_nums)
 
 	return model_zip
-

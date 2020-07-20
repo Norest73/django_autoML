@@ -331,7 +331,7 @@
 			
 			.plot-main-background {
 				margin: 0 0;
-				width:calc(100vw - 490px);
+				width:calc(100vw - 510px);
 				min-width: 680px;
 				height: 100%;
 				overflow: hidden;
@@ -343,7 +343,7 @@
 				/*top: 0;
 				right: 0;*/
 				margin: 0 0;
-				width: 270px;
+				width: 290px;
 				height: calc(100vh - 65px);
 				/*height: 100%;*/
 				background-color: rgb(242, 245, 245);
@@ -424,27 +424,6 @@
 				color: black!important;
 			}
 
-			button.selected {
-				background-color: rgba(180,180,180,0.7);
-				border: 1px solid rgb(160,160,160);
-				/*#b4b4b4*/
-			}
-
-			.plot-main-background {
-				/*top: 0;
-				left: 230px;*/
-				margin: 0 0;
-				width:calc(100vw - 520px);
-				min-width: 680px;
-				height: 100%;
-				/*height: 100%;*/
-				/*background-color: rgba(250, 250, 250,0.3);*/
-				/*position: fixed;*/
-				overflow: hidden;
-				z-index: 1;
-				float: left;
-			}
-
 			.select-iframe {
 				/*top: 0;
 				right: 0;*/
@@ -460,13 +439,16 @@
 				border: none;
 			}
 
-/*			button:active {
-				background-color: rgb(180,180,180);
+			.selectbox-model {
+				width: 135px;
+				height: 35px;
+				font-size: 15px;
+				font-weight: 550;
+				border: 1px solid rgb(150, 150, 150);
+				border-radius: 5px;
+				color: black;
 			}
 
-			button:focus {
-				background-color: rgb(180,180,180);
-			}*/
 
 		</style>
 	</head>
@@ -574,39 +556,38 @@
 
 				<div class='plot-main-background'>
 					<div id='plot-ground'>
-						<iframe id='iframe-plot-ground' name='iframe-plot-ground' src="../Report_plot/" ></iframe>
+						<iframe id='iframe-plot-ground' name='iframe-plot-ground' src="../ReportPlot/" ></iframe>
 					</div>
 				</div>
 
-				<div class='select-iframe'>
-					<div style="height:60px"><h2>&nbsp; &nbsp;Choose models</h2></div>
-					<div class='selectbar-html'>
+				<div class='selectbar'>
+					<div class='selectbar-subject'>
+						<i class="far fa-check-square fa-2x"></i>
+						&nbsp;
+						<span> Choose Models <span>
+					</div>
+					<div class='selectbar-content'>
 						<form name='model-selection' id='model-selection' action='../ReportPlot/' method='post' target='iframe-plot-ground'>
 							{% csrf_token %}
-							<div class='select-model'>
-								
-								{% for model in model_zip %}
-									<button type="submit" name="model-button" value="{{model.0}}" id="{{model.1}}">{{model.1}}</option>
-									<div style="height: 30px"></div>
-								{% endfor %}
 
+							<div class='select-model'>
+								<span style="font-size:15px; font-weight: 500; display: inline-block;"> Selected Model : </span>
+
+								<select class="selectbox-model" name='selected-model'>
+									<option value="" hidden selected>None</option>
+									{% for model in model_zip %}
+										<option value="{{model.0}}">{{model.0}}</option>
+									{% endfor %}
+								</select>
 							</div>
+
+							<input type='submit' id='submit-model' style="visibility: hidden;">
 						</form>
 						<iframe name="hiddenFrame" width="0" height="0" border="0" style="display: none;"></iframe>
 					</div>
 				</div>
 
 		<script>
-			// Model 1인 눌린채로 시작하게 (Default)
-			document.addEventListener("DOMContentLoaded", function(event) { 
-			    document.getElementById("Model(1)").click();
-			 });
-
-			// button 클릭시 색깔 변하기
-			$('button').on('click', function(){
-			    $('button').removeClass('selected');
-			    $(this).addClass('selected');
-			});
 
 			$('.Sidebar-button').on('click', function(){
 			    if( $('#Sidebar').width() > 200 ) {
@@ -642,6 +623,10 @@
 			function goBack(){
 				window.history.back();
 			}
+
+			$('.selectbox-model').change(function() {
+				$('#submit-model').click();
+			})
 		</script>
 	</body>
 </html>

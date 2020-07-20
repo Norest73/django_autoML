@@ -331,7 +331,7 @@
 
 			.plot-main-background {
 				margin: 0 0;
-				width:calc(100vw - 490px);
+				width:calc(100vw - 510px);
 				min-width: 680px;
 				height: 100%;
 				overflow: hidden;
@@ -343,7 +343,7 @@
 				/*top: 0;
 				right: 0;*/
 				margin: 0 0;
-				width: 270px;
+				width: 290px;
 				height: calc(100vh - 65px);
 				/*height: 100%;*/
 				background-color: rgb(242, 245, 245);
@@ -422,6 +422,58 @@
 			.controller-hover {
 				border: 3px solid black!important;
 				color: black!important;
+			}
+
+			#loading {
+				height: 100vh;
+				width: 100vw;
+				background-color: rgba(0,0,0,0.5);
+				position: absolute;
+				top: 0;
+				z-index: 200;
+				text-align: center;
+			}
+
+			#loading-section {
+				position: absolute;
+				margin: 0 auto;
+				top: 50%;
+				left: 50%;
+				min-width: 400px;
+				min-height: 150px;
+				margin: -75px 0 0 -200px;
+				background-color: rgb(241,242,243);
+				z-index: 201;
+				border-radius: 8px;
+				clear:both;
+			}
+
+			#loading-img {
+				min-width: 120px;
+				max-width: 120px;
+				max-height: 120px;
+				min-height: 120px;
+				position: relative;
+				/*top: -50%;*/
+				left: 2%;
+				margin: 15px 0 0 0;
+				float: left;
+			}
+
+			#loading-text {
+				position: relative;
+				margin-right: 25px;
+				/*margin-left: -20px;*/
+				margin-top: 20px;
+				margin-bottom: -40px;
+				float: right;
+			}
+
+			#loading-info {
+				font-size: 13px;
+				color: rgb(60,60,60);
+				text-align: left;
+				margin-top: -15px;
 			}
 
 		</style>
@@ -532,9 +584,6 @@
 					</div>
 				</div>
 
-				<!-- <iframe class='plot-ground' src="../Data_Analysis_plot/"> -->
-
-				<!-- <iframe class='select-iframe' src="../Data_Analysis_select/" scrolling="no"></iframe> -->
 				<div class='selectbar'>
 					<div class='selectbar-subject'>
 						<i class="far fa-check-square fa-2x"></i>
@@ -542,7 +591,6 @@
 						<span> Choose Variables <span>
 					</div>
 					<div class='selectbar-content'>
-						<!-- <form name='for-eda' id='myForm' action='../Data_Analysis_plot/' method='post' target='hiddenFrame'> -->
 						<form name='for-eda' id='myForm' action='../ExploratoryPlot/' method='post' target='iframe-plot-ground'>
 							{% csrf_token %}
 
@@ -578,7 +626,24 @@
 						<iframe name="hiddenFrame" width="0" height="0" border="0" style="display: none;"></iframe>
 					</div>
 				</div>
+
+		<div id='loading'>
+			<div id='loading-section'>
+				<img id='loading-img' src='../static/MachineLearning/images/spin.gif'>
+				<div id='loading-text'>
+					<div><h1>Now Loading...</h1></div>
+					<div id='loading-info'>※ 데이터 크기에 따라 최대 15분 소요 </div>
+				</div>
+			</div>
+		</div>	
 		<script>
+
+			// loading
+			window.onbeforeunload = function () { $('#loading').show(); }  //현재 페이지에서 다른 페이지로 넘어갈 때 표시해주는 기능
+	        $(window).load(function () {  //페이지가 로드 되면 로딩 화면을 없애주는 것
+	            $('#loading').hide();
+	        });
+
 
 			$('.Topbar-next, .Topbar-back, .Topbar-forward').mouseover(function(){
 				$(this).addClass('controller-hover');
@@ -607,14 +672,6 @@
 			       	$('.fa-arrow-alt-circle-right').addClass('fa-arrow-alt-circle-left')
 			        $('.fa-arrow-alt-circle-right').removeClass('fa-arrow-alt-circle-right')
 			    }
-			});
-
-			$('.Topbar-next, .Topbar-back, .Topbar-forward').mouseover(function(){
-				$(this).addClass('controller-hover');
-			});
-
-			$('.Topbar-next, .Topbar-back, .Topbar-forward').mouseout(function(){
-				$(this).removeClass('controller-hover');
 			});
 
 		</script>

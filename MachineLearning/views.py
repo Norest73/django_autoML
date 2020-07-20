@@ -375,21 +375,21 @@ def Report(request):
         json_info = json.load(f)
 
 
-    #  Modeling & 결과 적재 ---------------------------------------------------------------------------------------
-    name, mean_acc, mean_f1, confusion_final, confusion_labels, desc_name, desc_imp = XGB_n_Target(df_refined, json_info)
+    # XGBOOST Modeling (임시)
+    name, mean_acc, mean_pre, mean_rec, mean_f1, confusion_final, confusion_labels, desc_name, desc_imp = XGB_n_Target(df_refined, json_info)
 
-    # 2) Result 적재
+    # Model-info 데이터 입력 및 json 파일 저장
     model_info = {}
     model_info[name] = {}
     model_info[name]['acc_score'] = mean_acc
+    model_info[name]['pre_score'] = mean_pre
+    model_info[name]['rec_score'] = mean_rec
     model_info[name]['f1_score'] = mean_f1
     model_info[name]['confusion_labels'] = confusion_labels
     model_info[name]['confusion_matrix'] = confusion_final
     model_info[name]['feature_name'] = desc_name
     model_info[name]['feature_imp'] = desc_imp
 
-    # 전체 modeling 결과 저장
-    # 추후에 model을 선택해서 저장하게 할 때 팔요
     with open(os.path.abspath(os.path.join(settings.DB_ROOT, '{}_model-info.json'.format(client_ip))),'w') as f: 
         json.dump(model_info, f) 
 
@@ -403,39 +403,31 @@ def Report(request):
 def Report_plot(request):
     client_ip = get_client_ip(request)[0]
 
-    # modeling 결과 창
-
-    # Report_main에서 model명을 받아왔을 때
+    # Report Main에서 Model을 선택하여 데이터를 요청한 경우
     if request.method == 'POST':
         model_json = os.path.abspath(os.path.join(settings.DB_ROOT, '{}_model-info.json'.format(client_ip)))
         with open(model_json, 'r') as f:
             model_info = json.load(f)
 
-        # button value(model명) 정보를 이용하여 render할 값 뽑기
-        model_name = request.POST.get('model-button')
+        # Front-end에서 선택된 모델 데이터 로드
+        model_name = request.POST.get('selected-model')
         choice_model_info = model_info[model_name]
 
-        # back → front 로 전달할 값
-        # 1) Mean accuracy & F1_score
+        # Mean accuracy & F1_score & Confusion Matrix & Feature importance
         mean_acc = round((choice_model_info['acc_score'])*100,1)
+        mean_pre = round((choice_model_info['pre_score'])*100,1)
+        mean_rec = round((choice_model_info['rec_score'])*100,1)
         mean_f1 = round((choice_model_info['f1_score'])*100,1)
 
-        # 2) Confusion Matrix
         confusion_matrix = choice_model_info['confusion_matrix']
         confusion_labels = choice_model_info['confusion_labels']
-        # confusion_labels의 경우 X_label순서와 Y_label순서가 반대
-        confusion_labels_XY = [confusion_labels, confusion_labels[::-1]] # X_ls, Y_ls
-        # heatmap의 textColor를 위해 confusion_matrix의 value값들의 평균 넘김
-        confusion_mean = np.mean(sum(confusion_matrix,[]))
+        confusion_labels_XY = [confusion_labels, confusion_labels[::-1]]  # X_ls, Y_ls
+        confusion_mean = np.mean(sum(confusion_matrix,[]))  # heatmap의 textColor를 위해 value값들의 평균 값 산출
 
-        # 3) feature importance
-        # 20개까지 제한
-        # Report_plot에서 bar chart를 그릴때에도 쓰임
-        feature_name = choice_model_info['feature_name'][:20][::-1]
+        feature_name = choice_model_info['feature_name'][:20][::-1]  # 중요한 변수 20개 선정하여 산출
         feature_imp = choice_model_info['feature_imp'][:20][::-1]   
 
-        # 4) 주요변수 distplot을 그리기 위한 값들
-        # meta-info에서 target이 True인 값을 가져와서 y로 설정     
+        # Distribution Plots 변수 값 전달
         db_csv = pd.read_csv(os.path.abspath(os.path.join(settings.DB_ROOT, '{}.csv'.format(client_ip))), low_memory=False)
         db_json = os.path.abspath(os.path.join(settings.DB_ROOT, '{}_meta-info.json'.format(client_ip)))
         with open(db_json, 'r') as f:
@@ -443,27 +435,28 @@ def Report_plot(request):
 
         # feature engineering할 때 NaN 처리 (median, mean, drop, ...)
         # Distplot을 나타낼 때는 NaN값은 제외하고 그리겠음
-        # 일단은 target을 이런식으로 설정하지만 후에는 json_info에서 target == True인 값으로 설정해야함
 
-        # ※ 뽑은 중요 변수들에는 category도 들어감 b/c target encoding을 사용하였기 때문
-        # BUT 이러한 변수들은 distplot을 그릴 수 X
-        # → stacked bar / side bar로 표현
-        target = 'Survived'
+        # Target Feature 입력
+        for col in json_info:
+            if json_info[col]['target'] == True :
+                target = col
+
         distplot_ls = []
         distplot_text = []
+
         for feature in feature_name:
+            # 그래프를 그릴 수 없는 경우
             if judge_draw(json_info, db_csv, feature, target) == False:
                 distplot_ls.append(['Impossible'])
                 dist_text = '<div style="width:100%; height:120px"></div><div style="width:100%;"><span style="font-weight:600; font-size: 1.2em">그래프를 그릴 수 없습니다.</span></div><b><ol style="margin-left:-20px;margin-right:20px"><li style="line-height:2.3; font-size: 0.9em">선택한 변수의 모든 값이 Unique한 경우 (EX. ID, Name ..)</li><li style="line-height:2.3; font-size: 0.9em">선택한 변수의 모든 값이 Missing(NaN)인 경우 </li></ol></b>'
                 distplot_text.append(dist_text)
-
             else:
                 temp = db_csv[[feature,target]]
                 temp = temp.dropna()
                 temp.reset_index(drop=True, inplace=True)
 
                 if json_info[feature]['selected_type'] == 'Numeric':
-                    Distplots = distplot(json_info, temp, target, feature) # [label_num, final_labels, data_ls]
+                    Distplots = distplot(json_info, temp, feature, target) # [label_num, final_labels, data_ls]
                     Distplots = ['Numeric'] + Distplots
                     distplot_ls.append(Distplots)
 
@@ -482,38 +475,49 @@ def Report_plot(request):
         # meta-info에 있는 값들 (uniqueness, missing, ...) 가져오기
         # 일단은 col_types, uniqueness, missing 만!
         #   - 임시적으로 col_types를 넣음. 추후 변경 예정
-        key_ls = [] ; col_ls = [] ; uni_ls = [] ; miss_ls = [] ; descrip_ls = []
+        key_ls = []
+        type_ls = []
+        miss_ls = []
+        uni_ls = []
+        mode_ls = []
+        min_ls = []
+        mean_ls = []
+        max_ls = []
+        std_ls = []
+
         for key in json_info.keys():
-            col_type, uni, miss = json_info[key]['selected_type'], json_info[key]['uniqueness'], json_info[key]['missing']
-            key_ls.append(key) ; col_ls.append(col_type) ; uni_ls.append(uni) ; miss_ls.append(miss)
+
+            key_ls.append(key)
+            type_ls.append(json_info[key]['selected_type'])
+            miss_ls.append(json_info[key]['missing'])
+            uni_ls.append(json_info[key]['uniqueness'])
 
             data_col = db_csv[key]
-            if col_type == 'Numeric':
-                col_mean = round(np.mean(data_col),1); col_med = round(np.median(data_col),1)
-                col_std = round(np.std(data_col),1); col_range = '{} - {}'.format(np.min(data_col), np.max(data_col));
-                # desp = '{}는 숫자형 변수입니다. 해당 변수의 범위는 {}이며 평균은 {}, 표준편차는 {}입니다.'.format(key,col_range,col_mean,col_std)
-                desp = '해당 변수의 범위는 {}이며 평균은 {}, 표준편차는 {}입니다.'.format(col_range,col_mean,col_std)
+            if json_info[key]['selected_type'] == 'Numeric':
+                mode_ls.append(data_col.value_counts().idxmax())
+                min_ls.append(round(np.min(data_col),1))
+                mean_ls.append(round(np.mean(data_col),1))
+                max_ls.append(round(np.max(data_col),1))
+                std_ls.append(round(np.std(data_col),1))
 
-            elif col_type == 'Categorical':
-                unique_num = len(data_col.unique()); most_freq = data_col.value_counts().idxmax();
-                freq_num = data_col.value_counts().max();
-                # desp = '{}는 범주형 변수입니다. 해당 변수는 총 {}개의 category로 이루어져 있으며, 그 중 {}이(가) {}으로 가장 많은 부분을 차지하고 있습니다.'.format(key,unique_num,most_freq,freq_num)
-                desp = '해당 변수는 총 {}개의 category로 이루어져 있으며, 그 중 {}이(가) {}으로 가장 많은 부분을 차지하고 있습니다.'.format(unique_num,most_freq,freq_num)
+            else :
+                mode_ls.append(data_col.value_counts().idxmax())
+                min_ls.append('-')
+                mean_ls.append('-')
+                max_ls.append('-')
+                std_ls.append('-')
 
-            elif col_type == 'Time':
-                col_range = '{} - {}'.format(np.min(data_col), np.max(data_col));
-                # desp = '{}는 시간 변수입니다. 해당 변수는 {}사이의 시간을 나타냅니다. '.format(key,col_range)
-                desp = '해당 변수는 {}사이의 시간을 나타냅니다. '.format(col_range)
-            descrip_ls.append(desp)
-        explain_zip = zip(key_ls, col_ls, uni_ls, miss_ls, descrip_ls)
+        summary_zip = zip(key_ls, type_ls, miss_ls, uni_ls, mode_ls, min_ls, mean_ls, max_ls, std_ls)
 
-        return render(request, './MachineLearning/Report_plot.html',{'mean_acc':[mean_acc, 100-mean_acc], 'mean_f1':[mean_f1,100-mean_f1],
-                                                    'confusion_labels_XY':confusion_labels_XY, 'confusion_matrix':confusion_matrix, 'confusion_mean':confusion_mean,
+        return render(request, './MachineLearning/Report_plot.html',{'model_name':model_name, 'mean_acc':[mean_acc, 100-mean_acc], 
+                                                    'mean_pre':[mean_pre, 100-mean_pre], 'mean_rec':[mean_rec, 100-mean_rec], 
+                                                    'mean_f1':[mean_f1,100-mean_f1], 'confusion_labels_XY':confusion_labels_XY, 
+                                                    'confusion_matrix':confusion_matrix, 'confusion_mean':confusion_mean,
                                                     'feature_name':[feat+'  ' for feat in feature_name], 'feature_imp':feature_imp,
                                                     'distplot_ls':distplot_ls, 'dist_text':distplot_text ,
-                                                    'explain_zip':explain_zip,
+                                                    'summary_zip':summary_zip,
                                                     'Target':target})
 
     # 맨 처음 창
     else:
-        return render(request, './MachineLearning/Report_plot.html')
+        return render(request, './MachineLearning/EDA_plot.html')
