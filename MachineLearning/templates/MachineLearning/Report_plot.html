@@ -4,6 +4,8 @@
 		<meta charset="UTF-8">
 		<title> AutoML </title>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+		<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+  		<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
 		<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
 		
@@ -114,7 +116,7 @@
 				font-weight: 600;
 				/*line-height: 1.7;*/
 				text-align: center;	
-				margin: 20px 0 -20px 0;
+				margin: 0 0 -20px 0;
 			}
 
 			.blanks-all {
@@ -191,6 +193,25 @@
 			/*table.explain-table td {
 				border: 1px solid #f0f0f0;
 			}*/
+
+		    .swiper-slide {
+		      font-size: 18px;
+		      background: #fff;
+
+		      /* Center slide text vertically 
+		      display: -webkit-box;
+		      display: -ms-flexbox;
+		      display: -webkit-flex;
+		      display: flex; */
+		      -webkit-box-pack: center;
+		      -ms-flex-pack: center;
+		      -webkit-justify-content: center;
+		      justify-content: center;
+		      -webkit-box-align: center;
+		      -ms-flex-align: center;
+		      -webkit-align-items: center;
+		      align-items: center;
+		    }
 
 		</style>
 	</head>
@@ -272,20 +293,40 @@
 		</div>
 		<div class='blanks-blank' style="height: 30px"></div>
 
-		<div class="plots-all" id='for-plot5' style='height: 600px;'>
-			<div class="top-text" style='height: 80px;'>4. Distribution Plots</div>
-			<div class='slider-div' id='slider-div'>
+		<div class="plots-all swiper-container" id='for-plot5' style='height: 600px;'>
+			<div class="top-text" style='height: 40px;'>4. Distribution Plots</div>
+			<div class='slider-div swiper-wrapper' id='slider-div'>
 				<script type="text/javascript">
 					var feature_name = {{feature_name | safe}};
 					var distplot_ls = {{distplot_ls | safe}};
 					for (var i=feature_name.length -1 ; i>=0; i--) {
-						document.write("<div class='plot-text' id='"+"plot-text-"+i.toString()+"' style='height: 520px;'><div class='top-text5' id='top5-"+i.toString()+"'></div><div class='plots-plot5' id='"+
+						document.write("<div class='plot-text swiper-slide' id='"+"plot-text-"+i.toString()+"' style='height: 600px;'><div class='top-text5' id='top5-"+i.toString()+"'></div><div class='plots-plot5' id='"+
 							"plot5-"+i.toString()+"'></div><div class='bottom-text5' id='"+"text5-"+i.toString()+"'></div></div>");
 					};
 				</script>
 			</div>
+			<!-- Add Pagination -->
+		    <div class="swiper-pagination"></div>
+		    <!-- Add Arrows -->
+		    <div class="swiper-button-next"></div>
+		    <div class="swiper-button-prev"></div>
 		</div>
+
+		<div class='blanks-blank' style="height: 40px"></div>
 	</body>
+	<!-- Initialize Swiper -->
+	<script>
+	  	var swiper = new Swiper('.swiper-container', {
+	      pagination: {
+	        el: '.swiper-pagination',
+	        type: 'fraction',
+	      },
+	      navigation: {
+	        nextEl: '.swiper-button-next',
+	        prevEl: '.swiper-button-prev',
+	      },
+	    });
+	</script>
 	<script type="text/javascript">
 		// acc_plot & f1_plot
 		var model_name = '{{model_name | safe}}';
